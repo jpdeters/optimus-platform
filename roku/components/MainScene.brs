@@ -4,6 +4,7 @@ sub init()
     m.list = m.top.findNode("titles")
     m.browseGroup = m.top.findNode("browseGroup")
     m.detailGroup = m.top.findNode("detailGroup")
+    m.detailEyebrow = m.top.findNode("detailEyebrow")
     m.detailTitle = m.top.findNode("detailTitle")
     m.detailMeta = m.top.findNode("detailMeta")
     m.detailGenres = m.top.findNode("detailGenres")
@@ -313,11 +314,9 @@ sub toggleWatchlist()
             if id <> m.selectedTitleId then nextList.Push(id)
         end for
         m.watchlist = nextList
-        m.detailEyebrow = m.top.findNode("detailEyebrow")
         m.detailEyebrow.text = "REMOVED FROM WATCHLIST"
     else
         m.watchlist.Push(m.selectedTitleId)
-        m.detailEyebrow = m.top.findNode("detailEyebrow")
         m.detailEyebrow.text = "SAVED TO WATCHLIST"
     end if
     saveRegistryList("watchlist", m.watchlist)
