@@ -292,7 +292,6 @@ sub openSelectedTitle()
         m.detailGenres.text = joinArray(item.genres, "  ·  ")
         m.detailSynopsis.text = readString(item, "synopsis")
         m.detailAvailability.text = formatOffers(item.offers)
-    renderLaunchOptions(item)
         renderLaunchOptions(item)
     else
         m.detailTitle.text = "Loading title..."
