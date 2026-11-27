@@ -97,7 +97,7 @@ jobs:
           STATUS=$(curl -sS -o /tmp/register.json -w "%{http_code}" -c "$COOKIE_JAR" -X POST "$BASE/api/auth/register" -H "Content-Type: application/json" --data "$(jq -n --arg email "$EMAIL" --arg password "$PASSWORD" '{email:$email,password:$password}')")
           if [ "$STATUS" != "200" ]; then
             echo "::error::Real account registration failed (HTTP $STATUS). Safe response:"
-            jq -c '{error}' /tmp/register.json || cat /tmp/register.json
+            jq -c '{error,code}' /tmp/register.json || cat /tmp/register.json
             exit 1
           fi
           jq -e --arg email "$EMAIL" '.user.email == $email' /tmp/register.json
