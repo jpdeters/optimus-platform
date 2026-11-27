@@ -1,0 +1,17 @@
+{
+  "name": "OPTIMUS — Streaming, refined",
+  "short_name": "OPTIMUS",
+  "description": "Discover what's included with the streaming services you already subscribe to.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#101113",
+  "theme_color": "#101113",
+  "icons": [
+    {
+      "src": "/optimus-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
