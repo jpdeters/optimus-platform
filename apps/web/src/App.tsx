@@ -30,6 +30,50 @@ export default function App() {
   const [accountBusy,setAccountBusy]=useState(false);
   const [profileReady,setProfileReady]=useState(false);
 
+  const activateAccount=async(email:string)=>{
+    setAccount(email);
+    const response=await fetch("/api/profile");
+    if(!response.ok)throw Error("Your account is signed in, but its profile could not be loaded.");
+    const data=await response.json() as {profile?:{providers?:string[];watchlist?:CatalogTitle[]}|null};
+    if(data.profile){setSelected(data.profile.providers||[]);setSaved(data.profile.watchlist||[]);}
+    else{
+      const savedResponse=await fetch("/api/profile",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({providers:selected,watchlist:saved})});
+      if(!savedResponse.ok)throw Error("Your initial profile could not be saved.");
+    }
+    setProfileReady(true);
+  };
+  useEffect(()=>{
+    let cancelled=false;
+    fetch("/api/auth/me").then(r=>r.json()).then(async d=>{
+      if(cancelled||!d.user?.email)return;
+      setAccount(d.user.email);
+      const response=await fetch("/api/profile");
+      if(!response.ok)throw Error("Unable to load your OPTIMUS profile.");
+      const data=await response.json() as {profile?:{providers?:string[];watchlist?:CatalogTitle[]}|null};
+      if(cancelled)return;
+      if(data.profile){setSelected(data.profile.providers||[]);setSaved(data.profile.watchlist||[]);}
+      else await fetch("/api/profile",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({providers:selected,watchlist:saved})});
+      if(!cancelled)setProfileReady(true);
+    }).catch(e=>{if(!cancelled)setError(e.message||"Account connection unavailable.");});
+    return()=>{cancelled=true;};
+  },[]);
+  useEffect(()=>{
+    if(!account||!profileReady)return;
+    const timer=window.setTimeout(()=>{fetch("/api/profile",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({providers:selected,watchlist:saved})}).catch(()=>setError("Your changes could not sync. Check your connection."));},500);
+    return()=>clearTimeout(timer);
+  },[account,profileReady,selected,saved]);
+  const submitAccount=async()=>{
+    setAccountBusy(true);setAccountError("");
+    try{
+      const response=await fetch("/api/auth/"+accountMode,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:accountEmail,password:accountPassword})});
+      const data=await response.json();
+      if(!response.ok)throw Error(data.error||"Unable to sign in.");
+      await activateAccount(data.user.email);
+      setAccountPassword("");setAccountOpen(false);
+    }catch(e){setAccountError(e instanceof Error?e.message:"Unable to complete account request.");}
+    finally{setAccountBusy(false);}
+  };
+  const signOut=async()=>{await fetch("/api/auth/logout",{method:"POST"});setAccount(null);setProfileReady(false);setAccountOpen(false);};
   useEffect(()=>{const c=new AbortController();fetch("/api/providers",{signal:c.signal}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||"Unable to load services");return d;}).then(d=>{setProviders(Array.isArray(d.items)?d.items:[]);setError("");}).catch(e=>{if(e.name!=="AbortError")setError(e.message||"Unable to load services");}).finally(()=>{if(!c.signal.aborted)setProviderLoading(false);});return()=>c.abort();},[]);
   useEffect(()=>{localStorage.setItem("optimus-services",JSON.stringify(selected));},[selected]);
   useEffect(()=>{localStorage.setItem("optimus-watchlist-items",JSON.stringify(saved));},[saved]);
