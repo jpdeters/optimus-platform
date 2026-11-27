@@ -31,7 +31,7 @@ export function registerAuthRoutes(app: Hono<{ Bindings: AuthBindings }>) {
     return createSession(c, id);
   });
   app.post("/api/auth/login", async c => {
-    const body = await c.req.json<{ email?: string; password?: string }>().catch(() => ({}));
+    const body = await c.req.json<{ email?: string; password?: string }>().catch(() => ({} as { email?: string; password?: string }));
     const email = (body.email || "").trim().toLowerCase(), password = body.password || "";
     const user = await c.env.OPTIMUS_DB.prepare("SELECT id,password_salt,password_hash FROM users WHERE email=?").bind(email).first<{id:string;password_salt:string;password_hash:string}>();
     if (!user || !password || await passwordHash(password,user.password_salt) !== user.password_hash) return jsonError("Email or password is incorrect.", 401);
