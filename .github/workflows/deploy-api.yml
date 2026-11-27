@@ -2,6 +2,12 @@ name: Deploy Optimus API
 
 on:
   workflow_dispatch:
+  push:
+    branches: [release/mvp-stabilization]
+    paths:
+      - 'apps/api/**'
+      - 'packages/shared/**'
+      - '.github/workflows/deploy-api.yml'
 
 jobs:
   deploy:
