@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { CatalogResponse, CatalogTitle, HealthResponse, Provider } from "@optimus/shared";
 
-type Bindings = { APP_VERSION?: string; TMDB_READ_ACCESS_TOKEN?: string };
+type Bindings = { APP_VERSION?: string; TMDB_READ_ACCESS_TOKEN?: string; FANART_API_KEY?: string };
 type TmdbProvider = { provider_id: number; provider_name: string; logo_path?: string };
 type TmdbTitle = {
   id: number; media_type?: "movie" | "tv"; title?: string; name?: string;
@@ -25,6 +25,24 @@ async function tmdb<T>(path: string, token: string): Promise<T> {
   const response = await fetch(TMDB + path, { headers: { Authorization: `Bearer ${token}`, accept: "application/json" } });
   if (!response.ok) throw new Error(`TMDB request failed (${response.status})`);
   return response.json<T>();
+}
+type FanartImage = { url?: string; lang?: string; likes?: string };
+type FanartArtwork = { movieposter?: FanartImage[]; moviebackground?: FanartImage[]; tvposter?: FanartImage[]; showbackground?: FanartImage[] };
+function bestFanart(images?: FanartImage[]): string | undefined {
+  if (!images?.length) return undefined;
+  return [...images].filter(x => !!x.url).sort((a,b) => Number(b.lang === "en") - Number(a.lang === "en") || Number(b.likes || 0) - Number(a.likes || 0))[0]?.url;
+}
+async function addFanartFallback(title: CatalogTitle, mediaType: "movie" | "tv", tmdbId: number, key?: string): Promise<CatalogTitle> {
+  if (!key || (title.imageUrl && title.backdropUrl)) return title;
+  try {
+    const endpoint = mediaType === "movie" ? `https://webservice.fanart.tv/v3.2/movies/${tmdbId}?api_key=${encodeURIComponent(key)}` : `https://webservice.fanart.tv/v3.2/tv/${tmdbId}?source=tmdb&api_key=${encodeURIComponent(key)}`;
+    const response = await fetch(endpoint, { headers: { accept: "application/json" } });
+    if (!response.ok) return title;
+    const art = await response.json<FanartArtwork>();
+    const poster = bestFanart(mediaType === "movie" ? art.movieposter : art.tvposter);
+    const background = bestFanart(mediaType === "movie" ? art.moviebackground : art.showbackground);
+    return { ...title, imageUrl: title.imageUrl || poster, backdropUrl: title.backdropUrl || background };
+  } catch { return title; }
 }
 function mapTitle(raw: TmdbTitle, mediaType: "movie" | "tv", offers: CatalogTitle["offers"]): CatalogTitle {
   const date = raw.release_date || raw.first_air_date || "";
@@ -82,7 +100,9 @@ app.get("/api/catalog", async c => {
       try {
         const offers = await getSubscriptionOffers(mediaType, raw.id, token);
         const matching = offers.filter(o => selected.includes(o.providerId));
-        return matching.length ? mapTitle(raw, mediaType, matching) : null;
+        if (!matching.length) return null;
+        const mapped = mapTitle(raw, mediaType, matching);
+        return await addFanartFallback(mapped, mediaType, raw.id, c.env.FANART_API_KEY);
       } catch { return null; }
     }));
     const items = enriched.filter((x): x is CatalogTitle => x !== null);
@@ -102,7 +122,8 @@ app.get("/api/catalog/:id", async c => {
       tmdb<TmdbTitle & { genres?: { id:number; name:string }[]; runtime?:number; number_of_seasons?:number }>(`/${mediaType}/${rawId}?language=en-US`, token),
       getSubscriptionOffers(mediaType, Number(rawId), token)
     ]);
-    const title = mapTitle({ ...raw, genre_ids: raw.genres?.map(g => g.id) }, mediaType, offers);
+    const mapped = mapTitle({ ...raw, genre_ids: raw.genres?.map(g => g.id) }, mediaType, offers);
+    const title = await addFanartFallback(mapped, mediaType, Number(rawId), c.env.FANART_API_KEY);
     title.genres = raw.genres?.map(g => g.name) || title.genres;
     return c.json(title);
   } catch (error) {
