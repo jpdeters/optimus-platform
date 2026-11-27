@@ -80,3 +80,33 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
+
+      - name: End-to-end account registration, session, and profile test
+        run: |
+          set -euo pipefail
+          BASE="https://optimus-api.jpdeters1.workers.dev"
+          EMAIL="optimus-smoke-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}@example.invalid"
+          PASSWORD="Optimus-Smoke-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-Secure!"
+          COOKIE_JAR="$(mktemp)"
+          cleanup() {
+            npx wrangler d1 execute optimus-users --remote --config apps/api/wrangler.toml --command "DELETE FROM users WHERE email='$EMAIL'" >/dev/null 2>&1 || true
+            rm -f "$COOKIE_JAR"
+          }
+          trap cleanup EXIT
+
+          STATUS=$(curl -sS -o /tmp/register.json -w "%{http_code}" -c "$COOKIE_JAR" -X POST "$BASE/api/auth/register" -H "Content-Type: application/json" --data "$(jq -n --arg email "$EMAIL" --arg password "$PASSWORD" '{email:$email,password:$password}')")
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Real account registration failed (HTTP $STATUS). Safe response:"
+            jq -c '{error}' /tmp/register.json || cat /tmp/register.json
+            exit 1
+          fi
+          jq -e --arg email "$EMAIL" '.user.email == $email' /tmp/register.json
+
+          curl -fsS -b "$COOKIE_JAR" "$BASE/api/auth/me" | jq -e --arg email "$EMAIL" '.user.email == $email'
+          curl -fsS -b "$COOKIE_JAR" -X PUT "$BASE/api/profile" -H "Content-Type: application/json" --data '{"providers":["8"],"watchlist":[]}' | jq -e '.ok == true'
+          curl -fsS -b "$COOKIE_JAR" "$BASE/api/profile" | jq -e '.profile.providers == ["8"]'
+          curl -fsS -b "$COOKIE_JAR" -X POST "$BASE/api/auth/logout" | jq -e '.ok == true'
+          echo "Real registration, cookie session, profile persistence, and logout all passed."
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
