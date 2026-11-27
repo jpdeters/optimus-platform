@@ -3,18 +3,18 @@
     <script type="text/brightscript" uri="pkg:/source/config.brs" />
     <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
     <children>
-        <Rectangle width="1920" height="1080" color="#101319" />
-        <Label id="brand" text="OPTIMUS" translation="[100,70]" width="900" height="90"
+        <Rectangle width="1280" height="720" color="#101319" />
+        <Label id="brand" text="OPTIMUS" translation="[70,35]" width="700" height="65"
             color="#F4F2ED" font="font:LargeBoldSystemFont" />
-        <Label id="tagline" text="YOUR ENTERTAINMENT, UNIFIED" translation="[104,158]"
-            width="900" height="40" color="#A8AFB9" />
-        <Label id="section" text="DISCOVER" translation="[104,250]" width="800" height="55"
+        <Label id="tagline" text="YOUR ENTERTAINMENT, UNIFIED" translation="[74,100]"
+            width="700" height="30" color="#A8AFB9" />
+        <Label id="section" text="DISCOVER" translation="[74,165]" width="700" height="45"
             color="#F4F2ED" font="font:MediumBoldSystemFont" />
-        <Label id="status" text="Connecting to OPTIMUS..." translation="[104,315]"
-            width="1500" height="45" color="#A8AFB9" />
-        <LabelList id="titles" translation="[100,385]" itemSize="[1650,92]" numRows="6"
+        <Label id="status" text="Connecting to OPTIMUS..." translation="[74,220]"
+            width="1100" height="35" color="#A8AFB9" />
+        <LabelList id="titles" translation="[70,275]" itemSize="[1120,62]" numRows="5"
             color="#F4F2ED" focusedColor="#FFFFFF" />
-        <Label id="detail" text="Select a title to see its details." translation="[104,980]"
-            width="1650" height="55" color="#A8AFB9" />
+        <Label id="detail" text="Select a title to see its details." translation="[74,635]"
+            width="1120" height="55" color="#A8AFB9" />
     </children>
 </component>
