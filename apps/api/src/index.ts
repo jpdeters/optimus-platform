@@ -35,7 +35,7 @@ function mapTitle(raw: TmdbTitle, mediaType: "movie" | "tv", offers: CatalogTitl
     synopsis: raw.overview || "No synopsis supplied.",
     rating: raw.vote_average ? raw.vote_average.toFixed(1) + "/10" : undefined,
     runtime: raw.runtime ? `${raw.runtime} min` : undefined,
-    seasons: raw.number_of_seasons, offers
+    seasons: raw.number_of_seasons, imageUrl: raw.poster_path || undefined, offers
   };
 }
 async function getSubscriptionOffers(mediaType: "movie" | "tv", id: number, token: string) {
