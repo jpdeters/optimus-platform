@@ -1,0 +1,19 @@
+{
+  "name": "optimus-platform",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:web": "npm --workspace @optimus/web run dev",
+    "dev:api": "npm --workspace @optimus/api run dev",
+    "build": "npm run build --workspace @optimus/shared && npm run build --workspace @optimus/api && npm run build --workspace @optimus/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  }
+}
