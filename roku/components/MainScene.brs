@@ -15,7 +15,7 @@ end sub
 sub loadCatalog()
     base = OptimusApiBase()
     if base = "" or Instr(1, base, "YOUR-OPTIMUS-API-HOST") > 0
-        m.status.text = "API not configured. Set OptimusApiBase() in source/config.brs."
+        m.status.text = "API not configured. Edit source/config.brs."
         showDemoTitles()
         return
     end if
@@ -38,19 +38,20 @@ sub onCatalogResponse()
     parsed = ParseJson(body)
     items = extractItems(parsed)
     if items = invalid or items.Count() = 0
-        m.status.text = "The API returned no catalog items. Showing demo titles."
+        m.status.text = "No catalog items returned. Showing demo titles."
         showDemoTitles()
         return
     end if
 
     content = CreateObject("roSGNode", "ContentNode")
     for each item in items
-        title = readString(item, "title")
-        if title = "" then title = readString(item, "name")
+        title = readString(item, "name")
+        if title = "" then title = readString(item, "title")
         if title <> ""
             child = content.createChild("ContentNode")
             child.title = title
-            overview = readString(item, "overview")
+            overview = readString(item, "synopsis")
+            if overview = "" then overview = readString(item, "overview")
             if overview = "" then overview = readString(item, "description")
             child.description = overview
         end if
@@ -108,8 +109,5 @@ sub showDemoTitles()
 end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
-    if press and key = "back"
-        return false
-    end if
     return false
 end function
