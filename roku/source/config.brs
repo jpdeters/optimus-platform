@@ -1,9 +1,8 @@
-' Point this at the same API used by the OPTIMUS web client.
-' Local development example: http://192.168.1.20:8787
-' Deployed example: https://optimus-api.<your-account>.workers.dev
+' Point this at the deployed OPTIMUS API used by the web client.
+' The TMDB token stays on the API Worker and is never shipped to Roku.
 ' Do not include a trailing slash.
 function OptimusApiBase() as String
-    return "https://YOUR-OPTIMUS-API-HOST"
+    return "https://optimus-api.jpdeters1.workers.dev"
 end function
 
 ' Existing Hono API route used by apps/web.
