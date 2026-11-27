@@ -17,19 +17,15 @@ sub init()
     m.list.observeField("itemSelected", "onListSelected")
 
     m.registry = CreateObject("roRegistrySection", "optimus")
-    m.services = loadRegistryList("services", ["stream-a", "stream-b"])
+    m.services = loadRegistryList("services", [])
     m.watchlist = loadRegistryList("watchlist", [])
-    m.providers = [
-        {id:"stream-a", name:"Stream A"},
-        {id:"stream-b", name:"Stream B"},
-        {id:"stream-c", name:"Stream C"}
-    ]
+    m.providers = []
     m.catalogItems = []
     m.visibleIds = []
     m.currentView = "discover"
-    m.currentRequest = "catalog"
+    m.currentRequest = "providers"
     m.list.setFocus(true)
-    loadCatalog()
+    loadProviders()
 end sub
 
 function loadRegistryList(key as String, fallback as Object) as Object
@@ -55,21 +51,69 @@ function hasValue(values as Object, target as String) as Boolean
     return false
 end function
 
+sub loadProviders()
+    base = OptimusApiBase()
+    if base = "" or Instr(1, base, "YOUR-OPTIMUS-API-HOST") > 0
+        m.status.text = "Configure the OPTIMUS API to load real streaming services."
+        m.catalogItems = []
+        renderCurrentView()
+        return
+    end if
+    m.status.text = "Loading streaming services..."
+    m.currentRequest = "providers"
+    m.apiTask.requestUrl = base + "/api/providers"
+    m.apiTask.control = "RUN"
+end sub
+
+sub showProvidersResponse(code as Integer, body as String)
+    if code < 200 or code >= 300
+        m.status.text = "Could not load streaming services (" + code.ToStr() + ")."
+        return
+    end if
+    parsed = ParseJson(body)
+    items = extractItems(parsed)
+    if items = invalid then return
+    m.providers = items
+    valid = []
+    for each id in m.services
+        for each provider in m.providers
+            if provider.id = id then valid.Push(id)
+        end for
+    end for
+    m.services = valid
+    saveRegistryList("services", m.services)
+    loadCatalog()
+end sub
+
 sub loadCatalog()
     base = OptimusApiBase()
     if base = "" or Instr(1, base, "YOUR-OPTIMUS-API-HOST") > 0
-        m.status.text = "API not configured. Showing local demo catalog."
-        showDemoTitles()
+        m.status.text = "Configure the OPTIMUS API to load real listings."
+        m.catalogItems = []
+        renderCurrentView()
         return
     end if
-    m.status.text = "Loading the OPTIMUS catalog..."
+    if m.services.Count() = 0
+        m.catalogItems = []
+        m.status.text = "Select your streaming services in My Services."
+        renderCurrentView()
+        return
+    end if
+    serviceQuery = ""
+    for each id in m.services
+        if serviceQuery <> "" then serviceQuery = serviceQuery + ","
+        serviceQuery = serviceQuery + id
+    end for
+    m.status.text = "Finding titles on your services..."
     m.currentRequest = "catalog"
-    m.apiTask.requestUrl = base + OptimusApiPath()
+    m.apiTask.requestUrl = base + OptimusApiPath() + "?providers=" + serviceQuery
     m.apiTask.control = "RUN"
 end sub
 
 sub onApiResponse()
-    if m.currentRequest = "detail"
+    if m.currentRequest = "providers"
+        showProvidersResponse(m.apiTask.responseCode, m.apiTask.responseBody)
+    else if m.currentRequest = "detail"
         showTitleDetail(m.apiTask.responseCode, m.apiTask.responseBody)
     else
         showCatalogResponse(m.apiTask.responseCode, m.apiTask.responseBody)
@@ -78,19 +122,16 @@ end sub
 
 sub showCatalogResponse(code as Integer, body as String)
     if code < 200 or code >= 300
-        m.status.text = "API request failed (" + code.ToStr() + "). Showing demo catalog."
-        showDemoTitles()
+        m.status.text = "API request failed (" + code.ToStr() + "). Check the API connection."
+        m.catalogItems = []
+        renderCurrentView()
         return
     end if
     parsed = ParseJson(body)
     items = extractItems(parsed)
-    if items = invalid or items.Count() = 0
-        m.status.text = "No catalog items returned."
-        showDemoTitles()
-        return
-    end if
+    if items = invalid then items = []
     m.catalogItems = items
-    m.status.text = "Connected to OPTIMUS · " + items.Count().ToStr() + " titles"
+    m.status.text = items.Count().ToStr() + " titles available across your selected services"
     renderCurrentView()
 end sub
 
@@ -370,7 +411,7 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         return true
     else if key = "back" and m.currentView <> "discover"
         m.currentView = "discover"
-        renderCurrentView()
+        loadCatalog()
         return true
     end if
     return false
