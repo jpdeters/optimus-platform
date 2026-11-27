@@ -33,3 +33,21 @@
 .detailHero div{background:linear-gradient(0deg,#171b20 0%,#171b20a8 12%,transparent 76%),linear-gradient(90deg,#171b20a8,transparent 65%)}
 @media(max-width:1250px){.posterGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:27px 19px}}
 @media(max-width:760px){.posterGrid{gap:23px 14px}}
+
+.topActions{display:flex;align-items:center;gap:9px}
+.accountPill{display:flex;align-items:center;gap:8px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#171b20;border:1px solid #c5a66f55;color:#e0cfad;padding:9px 12px;border-radius:8px;font-size:10px}
+.accountPill:hover{border-color:var(--gold);background:#1d2228}
+.accountModal{width:min(460px,100%);background:#171b20;border:1px solid #ffffff2b;border-radius:12px;position:relative;padding:38px 34px 30px;box-shadow:0 25px 90px #000a}
+.accountModal h2{font:700 26px/1.2 Manrope;letter-spacing:-.04em;margin:13px 0}
+.accountLead{font-size:12px;line-height:1.8;color:#a5a39d;margin:0 0 24px}
+.accountModal label{display:grid;gap:8px;margin:15px 0;color:#c6b58f;font-size:10px;letter-spacing:.06em}
+.accountModal label input{height:44px;background:#101317;border:1px solid #ffffff25;border-radius:7px;padding:0 12px;color:#f4f2ed;font-size:12px;outline:none}
+.accountModal label input:focus{border-color:var(--gold)}
+.accountSubmit{width:100%;height:44px;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:9px;background:var(--gold);border:1px solid var(--gold);border-radius:7px;color:#151515;font-size:11px;font-weight:700}
+.accountSubmit:disabled{opacity:.5;cursor:not-allowed}
+.accountSubmit.secondary{background:#22272d;border-color:#ffffff28;color:#e4d5b7}
+.accountSwitch{display:block;margin:17px auto 0;background:transparent;border:0;color:#d3b77f;font-size:10px}
+.accountFine{margin:20px 0 0;color:#777f88;font-size:9px;line-height:1.7}
+.accountError{color:#e4a89b;font-size:11px;line-height:1.6}
+.syncStatus{display:flex;align-items:center;gap:9px;color:#b7c7a9;background:#82907814;border:1px solid #82907855;border-radius:7px;padding:13px;font-size:11px;margin:18px 0}
+@media(max-width:620px){.topActions{gap:6px}.accountPill{font-size:9px;padding:8px 9px;max-width:115px}.accountModal{padding:34px 22px 24px}.accountModal h2{font-size:23px}}
