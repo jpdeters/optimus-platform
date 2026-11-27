@@ -7,7 +7,7 @@ type TmdbProvider = { provider_id: number; provider_name: string; logo_path?: st
 type TmdbTitle = {
   id: number; media_type?: "movie" | "tv"; title?: string; name?: string;
   overview?: string; release_date?: string; first_air_date?: string;
-  genre_ids?: number[]; vote_average?: number; poster_path?: string;
+  genre_ids?: number[]; vote_average?: number; poster_path?: string; backdrop_path?: string;
   runtime?: number; number_of_seasons?: number; adult?: boolean;
 };
 const app = new Hono<{ Bindings: Bindings }>();
@@ -35,7 +35,7 @@ function mapTitle(raw: TmdbTitle, mediaType: "movie" | "tv", offers: CatalogTitl
     synopsis: raw.overview || "No synopsis supplied.",
     rating: raw.vote_average ? raw.vote_average.toFixed(1) + "/10" : undefined,
     runtime: raw.runtime ? `${raw.runtime} min` : undefined,
-    seasons: raw.number_of_seasons, imageUrl: raw.poster_path || undefined, offers
+    seasons: raw.number_of_seasons, imageUrl: raw.poster_path || undefined, backdropUrl: raw.backdrop_path || undefined, offers
   };
 }
 async function getSubscriptionOffers(mediaType: "movie" | "tv", id: number, token: string) {
