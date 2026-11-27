@@ -51,3 +51,9 @@
 .accountError{color:#e4a89b;font-size:11px;line-height:1.6}
 .syncStatus{display:flex;align-items:center;gap:9px;color:#b7c7a9;background:#82907814;border:1px solid #82907855;border-radius:7px;padding:13px;font-size:11px;margin:18px 0}
 @media(max-width:620px){.topActions{gap:6px}.accountPill{font-size:9px;padding:8px 9px;max-width:115px}.accountModal{padding:34px 22px 24px}.accountModal h2{font-size:23px}}
+
+
+/* External provider hand-off */
+.watchActions{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0 22px}
+.watchButton{display:inline-flex;align-items:center;gap:8px;padding:10px 13px;border:1px solid #b99f6e88;border-radius:7px;background:#b99f6e12;color:#e7d8b9;text-decoration:none;font-size:10px;font-weight:650;transition:background .2s,border-color .2s,transform .2s}
+.watchButton:hover{background:#b99f6e25;border-color:var(--gold);transform:translateY(-1px)}
