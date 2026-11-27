@@ -1,26 +1,36 @@
 # OPTIMUS Roku client
 
-Native Roku SceneGraph/BrightScript prototype. It consumes the same Hono API as the web application.
+Native Roku SceneGraph/BrightScript client. It consumes the same OPTIMUS API as the web application.
 
-## Shared API contract
+## API behavior
 
-The web client currently calls `/api/catalog` and `/api/providers`. The Roku client calls `GET /api/catalog` and reads the shared response shape:
+The client loads the live US streaming-provider list from `GET /api/providers`. Press OPTIONS from Discover to open My Services, then use OK to select or deselect subscription services. When returning to Discover, Roku requests only titles available through the selected services using `GET /api/catalog?providers=...`.
 
-```json
-{ "items": [{ "id": "…", "name": "Title", "synopsis": "…", "type": "series" }] }
-```
+The catalog is powered by TMDB. Only US subscription/flatrate offers are included in Discover results; rentals and purchases are excluded. Service selections and watchlist entries remain stored locally on this Roku for now; account sign-in and cross-device synchronization are not implemented yet.
 
 ## Configure the API
 
 Edit `source/config.brs`:
 
 - `OptimusApiBase()`: API origin, without a trailing slash.
-- `OptimusApiPath()`: currently `/api/catalog`.
+- `OptimusApiPath()`: `/api/catalog`.
+
+The API must be configured with a TMDB API Read Access Token. See the root README for setup. Do not put the TMDB token in the Roku app; it belongs only in the API Worker secret.
 
 For local Wrangler development, use your development computer's LAN IP, not `localhost`. Example: `http://192.168.1.20:8787`. The Roku and development computer must be on the same network and the firewall must allow the connection. Alternatively, use the deployed HTTPS Worker URL.
+
+## Controls
+
+- OPTIONS from Discover: My Services.
+- OK on a service: select/deselect it.
+- BACK from My Services: return to Discover and refresh matched listings.
+- OPTIONS cycles My Services, My Watchlist, and Discover.
+- OK on a title: open title details.
+- OPTIONS in title details: save/remove from Watchlist.
+- BACK from title details: return to the current list.
 
 ## Sideload
 
 Zip the contents of this directory so `manifest` is at the archive root. Upload the ZIP using the Roku Developer Application Installer at the Roku device's IP address.
 
-This is an early prototype and has not yet been compiled, packaged, or tested on physical Roku hardware. The current screen supports title-list navigation, title details, availability matching against selected services, and a watchlist. Press OPTIONS from Discover to cycle through My Services, My Watchlist, and Discover; press BACK to return to Discover from either list. In My Services, OK toggles the highlighted service. In a title detail page, OPTIONS saves or removes that title from the watchlist. Service selections and watchlist entries are currently stored locally in the Roku registry on that device; they are not yet linked to a subscriber account or synchronized with the web app. The catalog and provider entries in this prototype are fictional demonstration data. Search keyboard, artwork rows, and account synchronization are subsequent tasks.
+This remains an early prototype and must be packaged and tested on physical Roku hardware after each client update. Search keyboard, artwork rows, and account synchronization are subsequent tasks.
