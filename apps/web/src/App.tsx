@@ -7,7 +7,7 @@ function readStorage<T>(key: string, fallback: T): T {
   try { const value = localStorage.getItem(key); return value ? JSON.parse(value) as T : fallback; }
   catch { return fallback; }
 }
-const image = (path?: string, size = "w500") => path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
+const image = (path?: string, size = "w500") => path ? (path.startsWith("http") ? path : `https://image.tmdb.org/t/p/${size}${path}`) : "";
 export default function App() {
   const [titles,setTitles]=useState<CatalogTitle[]>([]);
   const [providers,setProviders]=useState<Provider[]>([]);
