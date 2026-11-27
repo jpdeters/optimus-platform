@@ -1,14 +1,21 @@
 sub init()
     m.status = m.top.findNode("status")
     m.list = m.top.findNode("titles")
-    m.detail = m.top.findNode("detail")
+    m.browseGroup = m.top.findNode("browseGroup")
+    m.detailGroup = m.top.findNode("detailGroup")
+    m.detailTitle = m.top.findNode("detailTitle")
+    m.detailMeta = m.top.findNode("detailMeta")
+    m.detailGenres = m.top.findNode("detailGenres")
+    m.detailSynopsis = m.top.findNode("detailSynopsis")
+    m.detailAvailability = m.top.findNode("detailAvailability")
 
     m.apiTask = CreateObject("roSGNode", "ApiTask")
-    m.apiTask.observeField("responseBody", "onCatalogResponse")
+    m.apiTask.observeField("responseBody", "onApiResponse")
     m.top.appendChild(m.apiTask)
 
     m.list.observeField("itemSelected", "onTitleSelected")
     m.list.setFocus(true)
+    m.currentRequest = "catalog"
     loadCatalog()
 end sub
 
@@ -21,14 +28,20 @@ sub loadCatalog()
     end if
 
     m.status.text = "Loading the OPTIMUS catalog..."
+    m.currentRequest = "catalog"
     m.apiTask.requestUrl = base + OptimusApiPath()
     m.apiTask.control = "RUN"
 end sub
 
-sub onCatalogResponse()
-    code = m.apiTask.responseCode
-    body = m.apiTask.responseBody
+sub onApiResponse()
+    if m.currentRequest = "detail"
+        showTitleDetail(m.apiTask.responseCode, m.apiTask.responseBody)
+    else
+        showCatalogResponse(m.apiTask.responseCode, m.apiTask.responseBody)
+    end if
+end sub
 
+sub showCatalogResponse(code as Integer, body as String)
     if code < 200 or code >= 300
         m.status.text = "API request failed (" + code.ToStr() + "). Showing demo titles."
         showDemoTitles()
@@ -50,16 +63,90 @@ sub onCatalogResponse()
         if title <> ""
             child = content.createChild("ContentNode")
             child.title = title
-            overview = readString(item, "synopsis")
-            if overview = "" then overview = readString(item, "overview")
-            if overview = "" then overview = readString(item, "description")
-            child.description = overview
+            child.description = readString(item, "synopsis")
+            child.id = readString(item, "id")
         end if
     end for
 
     m.list.content = content
     m.list.setFocus(true)
     m.status.text = "Connected to OPTIMUS · " + content.getChildCount().ToStr() + " titles"
+end sub
+
+sub onTitleSelected()
+    index = m.list.itemSelected
+    if index = invalid then return
+    node = m.list.content.getChild(index)
+    if node = invalid then return
+
+    m.selectedTitleId = node.id
+    if m.selectedTitleId = invalid or m.selectedTitleId = ""
+        m.detailTitle.text = node.title
+        m.detailMeta.text = "DEMO TITLE"
+        m.detailGenres.text = ""
+        m.detailSynopsis.text = "This is a sample catalog item. Connect the Roku client to the OPTIMUS API to load full title details."
+        m.detailAvailability.text = "Availability data will appear here when supplied by the catalog."
+        openDetailView()
+        return
+    end if
+
+    base = OptimusApiBase()
+    if base = "" or Instr(1, base, "YOUR-OPTIMUS-API-HOST") > 0
+        m.detailTitle.text = node.title
+        m.detailMeta.text = "DEMO TITLE"
+        m.detailGenres.text = ""
+        m.detailSynopsis.text = node.description
+        m.detailAvailability.text = "Configure the API to load availability."
+        openDetailView()
+        return
+    end if
+
+    m.detailTitle.text = node.title
+    m.detailMeta.text = "Loading title information..."
+    m.detailGenres.text = ""
+    m.detailSynopsis.text = ""
+    m.detailAvailability.text = ""
+    openDetailView()
+
+    m.currentRequest = "detail"
+    m.apiTask.requestUrl = base + "/api/catalog/" + m.selectedTitleId
+    m.apiTask.control = "RUN"
+end sub
+
+sub showTitleDetail(code as Integer, body as String)
+    if code < 200 or code >= 300
+        m.detailMeta.text = "Title details unavailable (" + code.ToStr() + ")"
+        m.detailSynopsis.text = "The catalog returned an error while loading this title."
+        m.detailAvailability.text = ""
+        return
+    end if
+
+    item = ParseJson(body)
+    if item = invalid
+        m.detailMeta.text = "Unable to read title details"
+        return
+    end if
+
+    name = readString(item, "name")
+    if name <> "" then m.detailTitle.text = name
+
+    titleType = UCase(readString(item, "type"))
+    year = readString(item, "year")
+    rating = readString(item, "rating")
+    runtime = readString(item, "runtime")
+    seasons = readString(item, "seasons")
+
+    meta = titleType
+    if year <> "" then meta = meta + "  ·  " + year
+    if rating <> "" then meta = meta + "  ·  " + rating
+    if runtime <> "" then meta = meta + "  ·  " + runtime
+    if seasons <> "" then meta = meta + "  ·  " + seasons + " season(s)"
+    m.detailMeta.text = meta
+
+    genresText = joinArray(item.genres, "  ·  ")
+    m.detailGenres.text = genresText
+    m.detailSynopsis.text = readString(item, "synopsis")
+    m.detailAvailability.text = formatOffers(item.offers)
 end sub
 
 function extractItems(payload as Dynamic) as Dynamic
@@ -86,17 +173,47 @@ function readString(item as Dynamic, key as String) as String
     return ""
 end function
 
-sub onTitleSelected()
-    index = m.list.itemSelected
-    if index = invalid then return
-    node = m.list.content.getChild(index)
-    if node <> invalid
-        if node.description <> invalid and node.description <> ""
-            m.detail.text = node.description
-        else
-            m.detail.text = node.title
-        end if
-    end if
+function joinArray(values as Dynamic, separator as String) as String
+    if values = invalid then return ""
+    result = ""
+    for each value in values
+        if result <> "" then result = result + separator
+        result = result + value.ToStr()
+    end for
+    return result
+end function
+
+function formatOffers(offers as Dynamic) as String
+    if offers = invalid then return "No availability information supplied."
+    result = ""
+    for each offer in offers
+        providerId = readString(offer, "providerId")
+        providerName = providerId
+        if providerId = "stream-a" then providerName = "Stream A"
+        if providerId = "stream-b" then providerName = "Stream B"
+        if providerId = "stream-c" then providerName = "Stream C"
+
+        offerType = readString(offer, "offerType")
+        region = readString(offer, "region")
+        line = providerName + "  ·  " + offerType
+        if region <> "" then line = line + "  ·  " + region
+        if result <> "" then result = result + Chr(10)
+        result = result + line
+    end for
+    if result = "" then return "No availability information supplied."
+    return result
+end function
+
+sub openDetailView()
+    m.browseGroup.visible = false
+    m.detailGroup.visible = true
+    m.top.setFocus(true)
+end sub
+
+sub closeDetailView()
+    m.detailGroup.visible = false
+    m.browseGroup.visible = true
+    m.list.setFocus(true)
 end sub
 
 sub showDemoTitles()
@@ -111,5 +228,10 @@ sub showDemoTitles()
 end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
+    if not press then return false
+    if m.detailGroup.visible and key = "back"
+        closeDetailView()
+        return true
+    end if
     return false
 end function
