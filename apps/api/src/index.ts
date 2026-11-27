@@ -1,8 +1,9 @@
 import { Hono } from "hono";
+import { registerAuthRoutes } from "./auth";
 import { cors } from "hono/cors";
 import type { CatalogResponse, CatalogTitle, HealthResponse, Provider } from "@optimus/shared";
 
-type Bindings = { APP_VERSION?: string; TMDB_READ_ACCESS_TOKEN?: string; FANART_API_KEY?: string };
+type Bindings = { APP_VERSION?: string; TMDB_READ_ACCESS_TOKEN?: string; FANART_API_KEY?: string; OPTIMUS_DB: D1Database };
 type TmdbProvider = { provider_id: number; provider_name: string; logo_path?: string };
 type TmdbTitle = {
   id: number; media_type?: "movie" | "tv"; title?: string; name?: string;
@@ -11,7 +12,8 @@ type TmdbTitle = {
   runtime?: number; number_of_seasons?: number; adult?: boolean;
 };
 const app = new Hono<{ Bindings: Bindings }>();
-app.use("/api/*", cors({ origin: "*", allowMethods: ["GET", "OPTIONS"], allowHeaders: ["Content-Type", "Authorization"] }));
+app.use("/api/*", cors({ origin: "*", allowMethods: ["GET", "POST", "PUT", "OPTIONS"], allowHeaders: ["Content-Type", "Authorization"] }));
+registerAuthRoutes(app);
 
 const TMDB = "https://api.themoviedb.org/3";
 const genreNames: Record<number, string> = {
