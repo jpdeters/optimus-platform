@@ -17,7 +17,7 @@ function cookieValue(cookie: string, name: string) {
 }
 function jsonError(message: string, status: number) { return Response.json({ error: message }, { status }); }
 
-export function registerAuthRoutes(app: Hono<{ Bindings: AuthBindings; Variables: Variables }>) {
+export function registerAuthRoutes(app: Hono<{ Bindings: AuthBindings }>) {
   app.post("/api/auth/register", async c => {
     const body = await c.req.json<{ email?: string; password?: string }>().catch(() => ({}));
     const email = (body.email || "").trim().toLowerCase();
