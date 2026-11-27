@@ -1,0 +1,6 @@
+name = "optimus-api"
+main = "src/index.ts"
+compatibility_date = "2025-02-14"
+
+[vars]
+APP_VERSION = "0.1.0"
