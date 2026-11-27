@@ -66,8 +66,10 @@ export default function App() {
     setAccountBusy(true);setAccountError("");
     try{
       const response=await fetch("/api/auth/"+accountMode,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:accountEmail,password:accountPassword})});
-      const data=await response.json();
-      if(!response.ok)throw Error(data.error||"Unable to sign in.");
+      const contentType=response.headers.get("content-type")||"";
+      const data=contentType.includes("application/json")?await response.json():{error:(await response.text()).slice(0,240)||`Server returned HTTP ${response.status}`};
+      if(!response.ok)throw Error(data.error||`Unable to complete account request (HTTP ${response.status}).`);
+      if(!data.user?.email)throw Error("The server did not confirm the account. Please try again.");
       await activateAccount(data.user.email);
       setAccountPassword("");setAccountOpen(false);
     }catch(e){setAccountError(e instanceof Error?e.message:"Unable to complete account request.");}
