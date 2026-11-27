@@ -133,4 +133,8 @@ app.get("/api/catalog/:id", async c => {
   }
 });
 app.notFound(c => c.json({ error: "Not found" }, 404));
+app.onError((error, c) => {
+  console.error("OPTIMUS API request failed", error);
+  return c.json({ error: "The OPTIMUS service encountered an unexpected error. Please try again." }, 500);
+});
 export default app;
