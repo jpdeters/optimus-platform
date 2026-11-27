@@ -17,3 +17,19 @@
 @media(max-width:1250px){.posterGrid{grid-template-columns:repeat(5,minmax(0,1fr))}}@media(max-width:1000px){.posterGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.sidebar{width:218px}.mainPanel{margin-left:218px}}@media(max-width:760px){.posterGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.sidebar{width:195px;padding-inline:14px}.mainPanel{margin-left:195px}.contentArea{padding-inline:22px}}@media(max-width:620px){.sidebar{display:none}.mainPanel{margin-left:0}.topbar{height:60px;padding:0 16px}.breadcrumb{display:none}.mobileBrand{display:flex;align-items:center;gap:8px;font:800 12px Manrope;letter-spacing:.16em}.mobileBrand .brandGlyph{width:28px;height:28px;font-size:15px}.contentArea{padding:27px 17px 42px}.sectionHeading{align-items:flex-start;flex-direction:column;gap:10px}.sectionHeading h2{font-size:22px}.serviceSummary{margin-top:0}.posterGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 12px}.filterRow{align-items:start}.searchBar kbd{display:none}.servicePill{font-size:9px;padding:8px}.serviceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.serviceGrid button{min-width:0}.serviceFooter{align-items:start;gap:15px;flex-direction:column}.mainPanel footer{padding:20px;line-height:1.6}.saveButton{opacity:1}.detailContent{padding:0 20px 24px}.detailContent h2{font-size:24px}.contentArea>h1{font-size:31px}}
 
 .providerSearch{height:48px;max-width:800px;margin:0 0 16px;padding:0 14px;display:flex;align-items:center;gap:12px;background:#15191e;border:1px solid #ffffff20;border-radius:8px;color:#929aa3}.providerSearch:focus-within{border-color:#c1a77788;box-shadow:0 0 0 3px #c1a77712}.providerSearch input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#eee;font-size:12px}.providerSearch input::placeholder{color:#777f88}.providerSearch button{display:grid;place-items:center;border:0;background:transparent;color:#aaa}.providerSearch>span{font-size:8px;letter-spacing:.12em;color:#7f8790;white-space:nowrap}.serviceGrid{max-width:800px}.serviceGrid button{min-height:52px}
+
+
+/* Premium catalog finish */
+.artwork{background:#171a1e;box-shadow:0 8px 24px #0005;transition:border-color .25s,box-shadow .25s,transform .25s}
+.posterCard{transition:transform .25s}
+.posterCard:hover{transform:translateY(-4px)}
+.posterCard:hover .artwork{box-shadow:0 16px 34px #0009,0 0 0 1px #c5a66f35}
+.artwork>img{background:#202329}
+.posterMeta h3{font-size:13px;letter-spacing:-.015em}
+.posterMeta p{font-size:10px}
+.providerDots span{font-size:8px;letter-spacing:.015em}
+.detailHero{height:250px}
+.detailHero img{object-fit:cover;object-position:center 32%;filter:none;opacity:.78}
+.detailHero div{background:linear-gradient(0deg,#171b20 0%,#171b20a8 12%,transparent 76%),linear-gradient(90deg,#171b20a8,transparent 65%)}
+@media(max-width:1250px){.posterGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:27px 19px}}
+@media(max-width:760px){.posterGrid{gap:23px 14px}}
