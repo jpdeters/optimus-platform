@@ -19,7 +19,12 @@ The API must be configured with a TMDB API Read Access Token. See the root READM
 
 For local Wrangler development, use your development computer's LAN IP, not `localhost`. Example: `http://192.168.1.20:8787`. The Roku and development computer must be on the same network and the firewall must allow the connection. Alternatively, use the deployed HTTPS Worker URL.
 
-## Controls
+## External streaming app launch
+
+On a title detail page, select **Open [service]** to hand off to the installed Roku channel. The current MVP maps common US services to Roku channel IDs: Netflix, Prime Video, Hulu, Disney+, Apple TV, Peacock, Paramount+, and Max. Unsupported services do not show a launch action.
+
+The hand-off uses Roku's local External Control Protocol launch endpoint. It opens the provider app only; it does not start playback or bypass provider sign-in. Direct-to-title deep links are provider-specific and are not assumed because the catalog currently supplies TMDB title IDs, not each provider's playback ID. This local ECP hand-off must be verified on the target Roku hardware.
+
 
 - OPTIONS from Discover: My Services.
 - OK on a service: select/deselect it.
