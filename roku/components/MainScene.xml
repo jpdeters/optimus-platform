@@ -15,7 +15,7 @@
                 width="1100" height="35" color="#A8AFB9" />
             <LabelList id="titles" translation="[70,275]" itemSize="[1120,62]" numRows="5"
                 color="#F4F2ED" focusedColor="#FFFFFF" />
-            <Label id="detailHint" text="Select a title for details  ·  BACK to exit details"
+            <Label id="detailHint" text="OK: Details  ·  OPTIONS: My Services / Watchlist"
                 translation="[74,635]" width="1120" height="40" color="#A8AFB9" />
         </Group>
         <Group id="detailGroup" visible="false">
@@ -33,8 +33,8 @@
                 width="800" height="35" color="#A8AFB9" font="font:MediumBoldSystemFont" />
             <Label id="detailAvailability" text="" translation="[74,555]" width="1120" height="90"
                 color="#F4F2ED" wrap="true" />
-            <Label id="detailBack" text="BACK  ·  Return to Discover" translation="[74,665]"
-                width="800" height="30" color="#A8AFB9" />
+            <Label id="detailBack" text="BACK  ·  Return to Discover     OPTIONS  ·  Save / Remove Watchlist"
+                translation="[74,665]" width="1120" height="30" color="#A8AFB9" />
         </Group>
     </children>
 </component>
