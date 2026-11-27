@@ -25,6 +25,24 @@ export default function App() {
   useEffect(()=>{const c=new AbortController();fetch("/api/providers",{signal:c.signal}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||"Unable to load services");return d;}).then(d=>{setProviders(Array.isArray(d.items)?d.items:[]);setError("");}).catch(e=>{if(e.name!=="AbortError")setError(e.message||"Unable to load services");}).finally(()=>{if(!c.signal.aborted)setProviderLoading(false);});return()=>c.abort();},[]);
   useEffect(()=>{localStorage.setItem("optimus-services",JSON.stringify(selected));},[selected]);
   useEffect(()=>{localStorage.setItem("optimus-watchlist-items",JSON.stringify(saved));},[saved]);
+  useEffect(()=>{
+    if(!saved.length)return;
+    let cancelled=false;
+    Promise.all(saved.filter(t=>!t.imageUrl&&!t.backdropUrl).map(async t=>{
+      try{
+        const r=await fetch("/api/catalog/"+encodeURIComponent(t.id));
+        if(!r.ok)return null;
+        const fresh=await r.json() as CatalogTitle;
+        return fresh.imageUrl||fresh.backdropUrl?{id:t.id,imageUrl:fresh.imageUrl,backdropUrl:fresh.backdropUrl}:null;
+      }catch{return null;}
+    })).then(updates=>{
+      if(cancelled)return;
+      const byId=new Map(updates.filter((x):x is NonNullable<typeof x>=>!!x).map(x=>[x.id,x]));
+      if(byId.size)setSaved(current=>current.map(t=>{const u=byId.get(t.id);return u?{...t,imageUrl:u.imageUrl,backdropUrl:u.backdropUrl}:t;}));
+    });
+    return()=>{cancelled=true;};
+  },[saved]);
+
   useEffect(()=>{if(!selected.length){setTitles([]);return;}const c=new AbortController();const timer=window.setTimeout(()=>{setLoading(true);const p=new URLSearchParams({providers:selected.join(",")});if(query.trim())p.set("q",query.trim());fetch("/api/catalog?"+p,{signal:c.signal}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||"Catalog search failed");return d;}).then(d=>{setTitles(Array.isArray(d.items)?d.items:[]);setError("");}).catch(e=>{if(e.name!=="AbortError")setError(e.message||"Catalog search failed");}).finally(()=>{if(!c.signal.aborted)setLoading(false);});},300);return()=>{clearTimeout(timer);c.abort();};},[query,selected]);
   const toggleProvider=(id:string)=>setSelected(v=>v.includes(id)?v.filter(x=>x!==id):[...v,id]);
   const toggleSaved=(title:CatalogTitle)=>setSaved(v=>v.some(x=>x.id===title.id)?v.filter(x=>x.id!==title.id):[title,...v]);
