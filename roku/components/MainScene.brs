@@ -16,6 +16,7 @@ sub init()
     m.list.observeField("itemSelected", "onTitleSelected")
     m.list.setFocus(true)
     m.currentRequest = "catalog"
+    m.titleIds = []
     loadCatalog()
 end sub
 
@@ -57,6 +58,7 @@ sub showCatalogResponse(code as Integer, body as String)
     end if
 
     content = CreateObject("roSGNode", "ContentNode")
+    m.titleIds = []
     for each item in items
         title = readString(item, "name")
         if title = "" then title = readString(item, "title")
@@ -64,7 +66,7 @@ sub showCatalogResponse(code as Integer, body as String)
             child = content.createChild("ContentNode")
             child.title = title
             child.description = readString(item, "synopsis")
-            child.id = readString(item, "id")
+            m.titleIds.Push(readString(item, "id"))
         end if
     end for
 
@@ -79,7 +81,8 @@ sub onTitleSelected()
     node = m.list.content.getChild(index)
     if node = invalid then return
 
-    m.selectedTitleId = node.id
+    m.selectedTitleId = ""
+    if m.titleIds <> invalid and index < m.titleIds.Count() then m.selectedTitleId = m.titleIds[index]
     if m.selectedTitleId = invalid or m.selectedTitleId = ""
         m.detailTitle.text = node.title
         m.detailMeta.text = "DEMO TITLE"
@@ -218,10 +221,12 @@ end sub
 
 sub showDemoTitles()
     content = CreateObject("roSGNode", "ContentNode")
+    m.titleIds = []
     samples = ["Chad Powers  |  Demo catalog item", "Cobra Kai  |  Demo catalog item", "The Bear  |  Demo catalog item", "Only Murders in the Building  |  Demo catalog item", "Severance  |  Demo catalog item"]
     for each sample in samples
         child = content.createChild("ContentNode")
         child.title = sample
+        m.titleIds.Push("")
     end for
     m.list.content = content
     m.list.setFocus(true)
