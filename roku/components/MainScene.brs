@@ -8,7 +8,7 @@ sub init()
     m.top.appendChild(m.apiTask)
 
     m.list.observeField("itemSelected", "onTitleSelected")
-    m.top.setFocus(true)
+    m.list.setFocus(true)
     loadCatalog()
 end sub
 
@@ -58,6 +58,7 @@ sub onCatalogResponse()
     end for
 
     m.list.content = content
+    m.list.setFocus(true)
     m.status.text = "Connected to OPTIMUS · " + content.getChildCount().ToStr() + " titles"
 end sub
 
@@ -106,6 +107,7 @@ sub showDemoTitles()
         child.title = sample
     end for
     m.list.content = content
+    m.list.setFocus(true)
 end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
