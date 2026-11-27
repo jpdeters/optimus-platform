@@ -25,6 +25,16 @@ jobs:
           PROVIDER_ID="$(jq -r '.items[0].id' providers.json)"
           curl --fail --silent --show-error "https://optimus-api.jpdeters1.workers.dev/api/catalog?providers=${PROVIDER_ID}" | tee catalog.json
           jq -e '(.items | type) == "array" and (.total | type) == "number"' catalog.json
+      - name: Validate Roku SceneGraph XML
+        run: |
+          python - <<'PY'
+          import glob
+          import xml.etree.ElementTree as ET
+          files = glob.glob("roku/**/*.xml", recursive=True)
+          for path in files:
+              ET.parse(path)
+              print(f"Valid XML: {path}")
+          PY
       - name: Package Roku sideload ZIP
         run: |
           cd roku
