@@ -8,4 +8,3 @@ splash_screen_hd=pkg:/images/splash_hd.png
 splash_color=#101319
 ui_resolutions=hd
 supports_input_launch=0
-requires_networking=1
