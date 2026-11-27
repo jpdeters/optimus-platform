@@ -1,7 +1,7 @@
-import type { Hono } from "hono";
+import type { Hono, Context } from "hono";
 
 export type AuthBindings = { OPTIMUS_DB: D1Database };
-type Variables = { userId: string };
+type AuthContext = Context<{ Bindings: AuthBindings }>;
 type Profile = { providers: string[]; watchlist: unknown[]; updatedAt?: string };
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
 const encoder = new TextEncoder();
@@ -66,13 +66,13 @@ export function registerAuthRoutes(app: Hono<{ Bindings: AuthBindings; Variables
     return c.json({ ok: true, updatedAt });
   });
 
-  async function currentUser(c: Parameters<Parameters<typeof app.get>[1]>[0]) {
+  async function currentUser(c: AuthContext) {
     const token = cookieValue(c.req.header("Cookie") || "", "optimus_session");
     if (!token) return null;
     const row = await c.env.OPTIMUS_DB.prepare("SELECT user_id FROM sessions WHERE token_hash=? AND expires_at>?").bind(await digest(token),Math.floor(Date.now()/1000)).first<{user_id:string}>();
     return row?.user_id || null;
   }
-  async function createSession(c: Parameters<Parameters<typeof app.post>[1]>[0], userId: string) {
+  async function createSession(c: AuthContext, userId: string) {
     const token = randomHex(32), expires = Math.floor(Date.now()/1000) + SESSION_SECONDS;
     await c.env.OPTIMUS_DB.prepare("INSERT INTO sessions (token_hash,user_id,expires_at,created_at) VALUES (?,?,?,?)").bind(await digest(token),userId,expires,new Date().toISOString()).run();
     c.header("Set-Cookie", `optimus_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_SECONDS}`);
