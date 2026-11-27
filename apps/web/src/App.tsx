@@ -23,16 +23,7 @@ const providerWatchUrl = (providerId: string, title: string) => {
     "386": `https://www.peacocktv.com/search?q=${q}`,
     "350": `https://tv.apple.com/search?term=${q}`
   };
-  return destinations[providerId] || ({
-    "8":"https://www.netflix.com",
-    "9":"https://www.primevideo.com",
-    "15":"https://www.hulu.com",
-    "337":"https://www.disneyplus.com",
-    "1899":"https://www.max.com",
-    "531":"https://www.paramountplus.com",
-    "386":"https://www.peacocktv.com",
-    "350":"https://tv.apple.com"
-  }[providerId] || "");
+  return destinations[providerId] || "";
 };
 export default function App() {
   const [titles,setTitles]=useState<CatalogTitle[]>([]);
