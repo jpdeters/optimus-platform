@@ -52,3 +52,9 @@ jobs:
           curl -fsS https://optimus-bud.pages.dev/ | grep -q "OPTIMUS"
           curl -fsS https://optimus-bud.pages.dev/api/health | jq -e '.status == "ok" and .service == "optimus-api"'
           curl -fsS https://optimus-bud.pages.dev/api/providers | jq -e '.items | length > 0'
+      - name: Verify account POST requests return API JSON
+        run: |
+          set -euo pipefail
+          STATUS=$(curl -sS -o /tmp/optimus-auth-response.json -w "%{http_code}" -X POST https://optimus-bud.pages.dev/api/auth/register -H "Content-Type: application/json" -d "{}")
+          test "$STATUS" = "400"
+          jq -e '.error == "Enter a valid email address."' /tmp/optimus-auth-response.json
