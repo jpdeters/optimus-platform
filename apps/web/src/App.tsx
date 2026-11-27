@@ -30,10 +30,19 @@ export default function App() {
     let cancelled=false;
     Promise.all(saved.filter(t=>!t.imageUrl&&!t.backdropUrl).map(async t=>{
       try{
-        const r=await fetch("/api/catalog/"+encodeURIComponent(t.id));
-        if(!r.ok)return null;
-        const fresh=await r.json() as CatalogTitle;
-        return fresh.imageUrl||fresh.backdropUrl?{id:t.id,imageUrl:fresh.imageUrl,backdropUrl:fresh.backdropUrl}:null;
+        const direct=await fetch("/api/catalog/"+encodeURIComponent(t.id));
+        if(direct.ok){
+          const fresh=await direct.json() as CatalogTitle;
+          if(fresh.imageUrl||fresh.backdropUrl)return {id:t.id,imageUrl:fresh.imageUrl,backdropUrl:fresh.backdropUrl};
+        }
+        const providers=t.offers.map(o=>o.providerId).join(",");
+        if(!providers)return null;
+        const params=new URLSearchParams({q:t.name,providers});
+        const search=await fetch("/api/catalog?"+params.toString());
+        if(!search.ok)return null;
+        const data=await search.json() as {items?:CatalogTitle[]};
+        const match=(data.items||[]).find(x=>x.id===t.id)||(data.items||[]).find(x=>x.name.toLowerCase()===t.name.toLowerCase());
+        return match&&(match.imageUrl||match.backdropUrl)?{id:t.id,imageUrl:match.imageUrl,backdropUrl:match.backdropUrl}:null;
       }catch{return null;}
     })).then(updates=>{
       if(cancelled)return;
