@@ -29,12 +29,16 @@
                 color="#A8AFB9" />
             <Label id="detailSynopsis" text="" translation="[74,330]" width="1120" height="150"
                 color="#F4F2ED" wrap="true" />
-            <Label id="detailAvailabilityHeader" text="WHERE TO WATCH" translation="[74,510]"
-                width="800" height="35" color="#A8AFB9" font="font:MediumBoldSystemFont" />
-            <Label id="detailAvailability" text="" translation="[74,555]" width="1120" height="90"
+            <Label id="detailAvailabilityHeader" text="WHERE TO WATCH" translation="[74,495]"
+                width="800" height="30" color="#A8AFB9" font="font:MediumBoldSystemFont" />
+            <Label id="detailAvailability" text="" translation="[74,532]" width="1120" height="55"
                 color="#F4F2ED" wrap="true" />
+            <Label id="detailWatchHeader" text="OPEN A STREAMING SERVICE" translation="[74,590]"
+                width="1000" height="28" color="#D5C19B" font="font:MediumBoldSystemFont" />
+            <LabelList id="launchOptions" translation="[70,620]" itemSize="[620,38]" numRows="1"
+                color="#F4F2ED" focusedColor="#FFFFFF" />
             <Label id="detailBack" text="BACK  ·  Return to Discover     OPTIONS  ·  Save / Remove Watchlist"
-                translation="[74,665]" width="1120" height="30" color="#A8AFB9" />
+                translation="[74,680]" width="1120" height="25" color="#A8AFB9" />
         </Group>
     </children>
 </component>
