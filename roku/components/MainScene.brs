@@ -331,6 +331,7 @@ sub showTitleDetail(code as Integer, body as String)
     m.detailGenres.text = joinArray(item.genres, "  ·  ")
     m.detailSynopsis.text = readString(item, "synopsis")
     m.detailAvailability.text = formatOffers(item.offers)
+    renderLaunchOptions(item)
 end sub
 
 function rokuChannelId(providerId as String, name as String) as String
