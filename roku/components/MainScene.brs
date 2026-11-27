@@ -10,11 +10,19 @@ sub init()
     m.detailGenres = m.top.findNode("detailGenres")
     m.detailSynopsis = m.top.findNode("detailSynopsis")
     m.detailAvailability = m.top.findNode("detailAvailability")
+    m.detailWatchHeader = m.top.findNode("detailWatchHeader")
+    m.launchOptions = m.top.findNode("launchOptions")
+
+    m.launchIds = []
+    m.launchTask = CreateObject("roSGNode", "LaunchTask")
+    m.launchTask.observeField("responseCode", "onLaunchResponse")
+    m.top.appendChild(m.launchTask)
 
     m.apiTask = CreateObject("roSGNode", "ApiTask")
     m.apiTask.observeField("responseBody", "onApiResponse")
     m.top.appendChild(m.apiTask)
     m.list.observeField("itemSelected", "onListSelected")
+    m.launchOptions.observeField("itemSelected", "onLaunchSelected")
 
     m.registry = CreateObject("roRegistrySection", "optimus")
     m.services = loadRegistryList("services", [])
@@ -284,6 +292,8 @@ sub openSelectedTitle()
         m.detailGenres.text = joinArray(item.genres, "  ·  ")
         m.detailSynopsis.text = readString(item, "synopsis")
         m.detailAvailability.text = formatOffers(item.offers)
+    renderLaunchOptions(item)
+        renderLaunchOptions(item)
     else
         m.detailTitle.text = "Loading title..."
         m.detailMeta.text = ""
@@ -321,6 +331,84 @@ sub showTitleDetail(code as Integer, body as String)
     m.detailGenres.text = joinArray(item.genres, "  ·  ")
     m.detailSynopsis.text = readString(item, "synopsis")
     m.detailAvailability.text = formatOffers(item.offers)
+end sub
+
+function rokuChannelId(providerId as String, name as String) as String
+    ' Roku channel IDs for common US streaming apps.
+    if providerId = "8" then return "12"       ' Netflix
+    if providerId = "9" then return "13"       ' Prime Video
+    if providerId = "15" then return "2285"   ' Hulu
+    if providerId = "337" then return "291097" ' Disney+
+    if providerId = "350" then return "551012" ' Apple TV
+    if providerId = "386" then return "593099" ' Peacock
+    if providerId = "531" then return "31440"  ' Paramount+
+    if providerId = "1899" then return "61322" ' Max
+    normalized = LCase(name)
+    if normalized = "netflix" then return "12"
+    if normalized = "prime video" or normalized = "amazon prime video" then return "13"
+    if normalized = "hulu" then return "2285"
+    if normalized = "disney+" or normalized = "disney plus" then return "291097"
+    if normalized = "apple tv+" or normalized = "apple tv plus" then return "551012"
+    if normalized = "peacock" then return "593099"
+    if normalized = "paramount+" or normalized = "paramount plus" then return "31440"
+    if normalized = "max" or normalized = "hbo max" then return "61322"
+    return ""
+end function
+
+sub renderLaunchOptions(item as Object)
+    content = CreateObject("roSGNode", "ContentNode")
+    m.launchIds = []
+    if item.offers <> invalid
+        for each offer in item.offers
+            pid = readString(offer, "providerId")
+            kind = readString(offer, "offerType")
+            if kind = "subscription" and hasValue(m.services, pid)
+                channelId = rokuChannelId(pid, providerName(pid))
+                if channelId <> ""
+                    child = content.createChild("ContentNode")
+                    child.title = "Open " + providerName(pid)
+                    m.launchIds.Push(channelId)
+                end if
+            end if
+        end for
+    end if
+    m.launchOptions.content = content
+    m.launchOptions.visible = m.launchIds.Count() > 0
+    if m.launchIds.Count() > 0
+        m.detailWatchHeader.text = "OPEN A STREAMING SERVICE"
+    else
+        m.detailWatchHeader.text = "APP LAUNCH NOT YET AVAILABLE FOR THESE SERVICES"
+    end if
+end sub
+
+sub onLaunchSelected()
+    index = m.launchOptions.itemSelected
+    if index = invalid or index < 0 or index >= m.launchIds.Count() then return
+    channelId = m.launchIds[index]
+    m.detailEyebrow.text = "OPENING " + UCase(providerNameForChannel(channelId))
+    m.launchTask.requestUrl = "http://127.0.0.1:8060/launch/" + channelId
+    m.launchTask.control = "RUN"
+end sub
+
+function providerNameForChannel(channelId as String) as String
+    if channelId = "12" then return "Netflix"
+    if channelId = "13" then return "Prime Video"
+    if channelId = "2285" then return "Hulu"
+    if channelId = "291097" then return "Disney+"
+    if channelId = "551012" then return "Apple TV"
+    if channelId = "593099" then return "Peacock"
+    if channelId = "31440" then return "Paramount+"
+    if channelId = "61322" then return "Max"
+    return "STREAMING APP"
+end function
+
+sub onLaunchResponse()
+    code = m.launchTask.responseCode
+    if code >= 200 and code < 400
+        m.detailEyebrow.text = "STREAMING APP OPENED"
+    else
+        m.detailEyebrow.text = "COULD NOT OPEN APP — CHECK ROKU APP INSTALLATION"
+    end if
 end sub
 
 function formatOffers(offers as Dynamic) as String
@@ -366,7 +454,11 @@ end sub
 sub openDetailView()
     m.browseGroup.visible = false
     m.detailGroup.visible = true
-    m.top.setFocus(true)
+    if m.launchIds.Count() > 0
+        m.launchOptions.setFocus(true)
+    else
+        m.top.setFocus(true)
+    end if
 end sub
 
 sub closeDetailView()
