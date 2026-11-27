@@ -24,12 +24,32 @@ export function registerAuthRoutes(app: Hono<{ Bindings: AuthBindings }>) {
     const password = body.password || "";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return jsonError("Enter a valid email address.", 400);
     if (password.length < 12 || password.length > 128) return jsonError("Use a password between 12 and 128 characters.", 400);
-    const id = crypto.randomUUID(), salt = randomHex(16), hash = await passwordHash(password, salt);
+
     try {
-      await c.env.OPTIMUS_DB.prepare("INSERT INTO users (id,email,password_salt,password_hash,created_at) VALUES (?,?,?,?,?)").bind(id,email,salt,hash,new Date().toISOString()).run();
-    } catch { return jsonError("An account with that email may already exist.", 409); }
-    return createSession(c, id);
+      const id = crypto.randomUUID();
+      const salt = randomHex(16);
+      const hash = await passwordHash(password, salt);
+      const token = randomHex(32);
+      const expires = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
+      const createdAt = new Date().toISOString();
+      const tokenHash = await digest(token);
+
+      // Create the user and first session atomically. A failed session insert
+      // must never leave behind an account that cannot be signed into.
+      await c.env.OPTIMUS_DB.batch([
+        c.env.OPTIMUS_DB.prepare("INSERT INTO users (id,email,password_salt,password_hash,created_at) VALUES (?,?,?,?,?)").bind(id,email,salt,hash,createdAt),
+        c.env.OPTIMUS_DB.prepare("INSERT INTO sessions (token_hash,user_id,expires_at,created_at) VALUES (?,?,?,?)").bind(tokenHash,id,expires,createdAt)
+      ]);
+      c.header("Set-Cookie", `optimus_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_SECONDS}`);
+      return c.json({ user: { email } });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("OPTIMUS account registration failed", message);
+      if (/UNIQUE constraint failed: users\.email/i.test(message)) return jsonError("An account with that email already exists. Try signing in instead.", 409);
+      return jsonError("Account creation is temporarily unavailable. Please try again shortly.", 503);
+    }
   });
+
   app.post("/api/auth/login", async c => {
     const body = await c.req.json<{ email?: string; password?: string }>().catch(() => ({} as { email?: string; password?: string }));
     const email = (body.email || "").trim().toLowerCase(), password = body.password || "";
