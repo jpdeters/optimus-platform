@@ -1,0 +1,13 @@
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import type { CatalogResponse,HealthResponse } from "@optimus/shared";
+import { providers,titles } from "./catalog";
+type Bindings={APP_VERSION?:string};
+const app=new Hono<{Bindings:Bindings}>();
+app.use("/api/*",cors({origin:["http://localhost:5173"],allowMethods:["GET","OPTIONS"],allowHeaders:["Content-Type","Authorization"]}));
+app.get("/api/health",c=>{const result:HealthResponse={status:"ok",service:"optimus-api",version:c.env.APP_VERSION??"0.1.0"};return c.json(result);});
+app.get("/api/providers",c=>c.json({items:providers}));
+app.get("/api/catalog",c=>{const q=(c.req.query("q")??"").trim().toLowerCase();const provider=c.req.query("provider");const items=titles.filter(t=>(!q||[t.name,t.synopsis,...t.genres].join(" ").toLowerCase().includes(q))&&(!provider||t.offers.some(o=>o.providerId===provider)));const result:CatalogResponse={items,total:items.length};return c.json(result);});
+app.get("/api/catalog/:id",c=>{const title=titles.find(t=>t.id===c.req.param("id"));if(!title)return c.json({error:"Title not found"},404);return c.json(title);});
+app.notFound(c=>c.json({error:"Not found"},404));
+export default app;
