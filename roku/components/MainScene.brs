@@ -406,6 +406,8 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
             m.currentView = "watchlist"
         else
             m.currentView = "discover"
+            loadCatalog()
+            return true
         end if
         renderCurrentView()
         return true
