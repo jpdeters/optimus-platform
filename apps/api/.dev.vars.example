@@ -1,0 +1,2 @@
+# Copy to apps/api/.dev.vars and add your TMDB API Read Access Token
+TMDB_READ_ACCESS_TOKEN=your_tmdb_bearer_token
