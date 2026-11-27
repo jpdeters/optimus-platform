@@ -23,4 +23,4 @@ For local Wrangler development, use your development computer's LAN IP, not `loc
 
 Zip the contents of this directory so `manifest` is at the archive root. Upload the ZIP using the Roku Developer Application Installer at the Roku device's IP address.
 
-This is an early prototype and has not yet been compiled, packaged, or tested on physical Roku hardware. The current screen supports title-list navigation and selection. Search keyboard, artwork rows, authentication, and richer detail navigation are subsequent tasks.
+This is an early prototype and has not yet been compiled, packaged, or tested on physical Roku hardware. The current screen supports title-list navigation, API-backed title detail pages, availability offer display, and Back navigation to Discover. Search keyboard, artwork rows, and authentication are subsequent tasks.
