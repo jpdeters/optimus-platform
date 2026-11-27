@@ -1,0 +1,41 @@
+name: Verify API and package Roku
+
+on:
+  push:
+    branches:
+      - release/mvp-stabilization
+  workflow_dispatch:
+
+jobs:
+  verify-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release
+        uses: actions/checkout@v4
+      - name: Verify live API health
+        run: |
+          curl --fail --silent --show-error https://optimus-api.jpdeters1.workers.dev/api/health | tee health.json
+          jq -e '.status == "ok" and .service == "optimus-api"' health.json
+      - name: Verify live streaming providers
+        run: |
+          curl --fail --silent --show-error https://optimus-api.jpdeters1.workers.dev/api/providers | tee providers.json
+          jq -e '.items | length > 0' providers.json
+      - name: Verify subscription-filtered catalog response
+        run: |
+          PROVIDER_ID="$(jq -r '.items[0].id' providers.json)"
+          curl --fail --silent --show-error "https://optimus-api.jpdeters1.workers.dev/api/catalog?providers=${PROVIDER_ID}" | tee catalog.json
+          jq -e '(.items | type) == "array" and (.total | type) == "number"' catalog.json
+      - name: Package Roku sideload ZIP
+        run: |
+          cd roku
+          zip -r ../optimus-roku.zip manifest source components
+          cd ..
+          unzip -l optimus-roku.zip
+          unzip -p optimus-roku.zip manifest | grep -q '^title=OPTIMUS$'
+      - name: Upload Roku package
+        uses: actions/upload-artifact@v4
+        with:
+          name: optimus-roku-sideload
+          path: optimus-roku.zip
+          if-no-files-found: error
+          retention-days: 30
