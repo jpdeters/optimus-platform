@@ -4,13 +4,15 @@ export type AuthBindings = { APP_VERSION?: string; TMDB_READ_ACCESS_TOKEN?: stri
 type AuthContext = Context<{ Bindings: AuthBindings }>;
 type Profile = { providers: string[]; watchlist: unknown[]; updatedAt?: string };
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
+// Cloudflare Workers currently rejects a single PBKDF2 operation above 100,000 iterations.
+const PASSWORD_ITERATIONS = 100000;
 const encoder = new TextEncoder();
 const hex = (bytes: Uint8Array) => [...bytes].map(x => x.toString(16).padStart(2, "0")).join("");
 const randomHex = (length: number) => { const bytes = new Uint8Array(length); crypto.getRandomValues(bytes); return hex(bytes); };
 async function digest(value: string) { return hex(new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(value)))); }
-async function passwordHash(password: string, salt: string) {
+async function passwordHash(password: string, salt: string, iterations = PASSWORD_ITERATIONS) {
   const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
-  return hex(new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: encoder.encode(salt), iterations: 310000 }, key, 256)));
+  return hex(new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: encoder.encode(salt), iterations }, key, 256)));
 }
 function cookieValue(cookie: string, name: string) {
   return cookie.split(";").map(x => x.trim()).find(x => x.startsWith(name + "="))?.slice(name.length + 1);
@@ -25,40 +27,36 @@ export function registerAuthRoutes(app: Hono<{ Bindings: AuthBindings }>) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return jsonError("Enter a valid email address.", 400);
     if (password.length < 12 || password.length > 128) return jsonError("Use a password between 12 and 128 characters.", 400);
 
-    let failedStage = "password-hash";
     try {
       const id = crypto.randomUUID();
       const salt = randomHex(16);
       const hash = await passwordHash(password, salt);
-      failedStage = "session-token";
       const token = randomHex(32);
       const expires = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
       const createdAt = new Date().toISOString();
       const tokenHash = await digest(token);
 
-      failedStage = "database-write";
       // Create the user and first session atomically. A failed session insert
       // must never leave behind an account that cannot be signed into.
       await c.env.OPTIMUS_DB.batch([
-        c.env.OPTIMUS_DB.prepare("INSERT INTO users (id,email,password_salt,password_hash,created_at) VALUES (?,?,?,?,?)").bind(id,email,salt,hash,createdAt),
+        c.env.OPTIMUS_DB.prepare("INSERT INTO users (id,email,password_salt,password_hash,password_iterations,created_at) VALUES (?,?,?,?,?,?)").bind(id,email,salt,hash,PASSWORD_ITERATIONS,createdAt),
         c.env.OPTIMUS_DB.prepare("INSERT INTO sessions (token_hash,user_id,expires_at,created_at) VALUES (?,?,?,?)").bind(tokenHash,id,expires,createdAt)
       ]);
-      failedStage = "complete";
       c.header("Set-Cookie", `optimus_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_SECONDS}`);
       return c.json({ user: { email } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error("OPTIMUS account registration failed", message);
       if (/UNIQUE constraint failed: users\.email/i.test(message)) return jsonError("An account with that email already exists. Try signing in instead.", 409);
-      return c.json({ error: "Account creation is temporarily unavailable. Please try again shortly.", code: failedStage }, 503);
+      return jsonError("Account creation is temporarily unavailable. Please try again shortly.", 503);
     }
   });
 
   app.post("/api/auth/login", async c => {
     const body = await c.req.json<{ email?: string; password?: string }>().catch(() => ({} as { email?: string; password?: string }));
     const email = (body.email || "").trim().toLowerCase(), password = body.password || "";
-    const user = await c.env.OPTIMUS_DB.prepare("SELECT id,password_salt,password_hash FROM users WHERE email=?").bind(email).first<{id:string;password_salt:string;password_hash:string}>();
-    if (!user || !password || await passwordHash(password,user.password_salt) !== user.password_hash) return jsonError("Email or password is incorrect.", 401);
+    const user = await c.env.OPTIMUS_DB.prepare("SELECT id,password_salt,password_hash,password_iterations FROM users WHERE email=?").bind(email).first<{id:string;password_salt:string;password_hash:string;password_iterations:number}>();
+    if (!user || !password || await passwordHash(password,user.password_salt,user.password_iterations) !== user.password_hash) return jsonError("Email or password is incorrect.", 401);
     return createSession(c,user.id);
   });
   app.post("/api/auth/logout", async c => {
