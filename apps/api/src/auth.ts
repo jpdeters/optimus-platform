@@ -19,7 +19,7 @@ function jsonError(message: string, status: number) { return Response.json({ err
 
 export function registerAuthRoutes(app: Hono<{ Bindings: AuthBindings }>) {
   app.post("/api/auth/register", async c => {
-    const body = await c.req.json<{ email?: string; password?: string }>().catch(() => ({}));
+    const body = await c.req.json<{ email?: string; password?: string }>().catch(() => ({} as { email?: string; password?: string }));
     const email = (body.email || "").trim().toLowerCase();
     const password = body.password || "";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return jsonError("Enter a valid email address.", 400);
