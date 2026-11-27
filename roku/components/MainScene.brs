@@ -299,6 +299,10 @@ sub openSelectedTitle()
         m.detailGenres.text = ""
         m.detailSynopsis.text = ""
         m.detailAvailability.text = ""
+        m.launchIds = []
+        m.launchOptions.content = CreateObject("roSGNode", "ContentNode")
+        m.launchOptions.visible = false
+        m.detailWatchHeader.text = "NO STREAMING APP MATCH AVAILABLE"
     end if
     openDetailView()
 
