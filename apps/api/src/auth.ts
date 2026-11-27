@@ -1,6 +1,6 @@
 import type { Hono, Context } from "hono";
 
-export type AuthBindings = { OPTIMUS_DB: D1Database };
+export type AuthBindings = { APP_VERSION?: string; TMDB_READ_ACCESS_TOKEN?: string; FANART_API_KEY?: string; OPTIMUS_DB: D1Database };
 type AuthContext = Context<{ Bindings: AuthBindings }>;
 type Profile = { providers: string[]; watchlist: unknown[]; updatedAt?: string };
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
