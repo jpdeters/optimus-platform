@@ -8,6 +8,32 @@ function readStorage<T>(key: string, fallback: T): T {
   catch { return fallback; }
 }
 const image = (path?: string, size = "w500") => path ? (path.startsWith("http") ? path : `https://image.tmdb.org/t/p/${size}${path}`) : "";
+
+// Provider search destinations are used instead of guessing provider-specific
+// content IDs. A direct title deep link can be added when a provider exposes one.
+const providerWatchUrl = (providerId: string, title: string) => {
+  const q = encodeURIComponent(title);
+  const destinations: Record<string, string> = {
+    "8": `https://www.netflix.com/search?q=${q}`,
+    "9": `https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${q}`,
+    "15": `https://www.hulu.com/search?q=${q}`,
+    "337": `https://www.disneyplus.com/search?q=${q}`,
+    "1899": `https://www.max.com/search?q=${q}`,
+    "531": `https://www.paramountplus.com/search/?query=${q}`,
+    "386": `https://www.peacocktv.com/search?q=${q}`,
+    "350": `https://tv.apple.com/search?term=${q}`
+  };
+  return destinations[providerId] || ({
+    "8":"https://www.netflix.com",
+    "9":"https://www.primevideo.com",
+    "15":"https://www.hulu.com",
+    "337":"https://www.disneyplus.com",
+    "1899":"https://www.max.com",
+    "531":"https://www.paramountplus.com",
+    "386":"https://www.peacocktv.com",
+    "350":"https://tv.apple.com"
+  }[providerId] || "");
+};
 export default function App() {
   const [titles,setTitles]=useState<CatalogTitle[]>([]);
   const [providers,setProviders]=useState<Provider[]>([]);
@@ -138,6 +164,6 @@ export default function App() {
       <footer><span>OPTIMUS</span><span>Availability in the United States · Powered by TMDB</span><span>This product uses the TMDB API but is not endorsed or certified by TMDB.</span></footer>
     </main>
     {accountOpen&&<div className="modalBackdrop" onClick={()=>setAccountOpen(false)}><section className="accountModal" role="dialog" aria-modal="true" aria-label="OPTIMUS account" onClick={e=>e.stopPropagation()}><button className="closeModal" onClick={()=>setAccountOpen(false)} aria-label="Close"><X/></button>{account?<><div className="eyebrow">YOUR OPTIMUS IDENTITY</div><h2>Your streaming, wherever you go.</h2><p className="accountLead">Signed in as <strong>{account}</strong>. Your services and watchlist sync across your devices.</p><div className="syncStatus"><Check size={17}/> Your profile is {profileReady?"synced":"connecting"}</div><button className="accountSubmit secondary" onClick={signOut}><LogOut size={16}/> Sign out</button></>:<><div className="eyebrow">{accountMode==="login"?"WELCOME BACK":"CREATE YOUR OPTIMUS ACCOUNT"}</div><h2>{accountMode==="login"?"Your watchlist travels with you.":"One account. Every device."}</h2><p className="accountLead">Your services and watchlist stay with your OPTIMUS account—not the television you're using.</p><label>Email address<input type="email" autoComplete="email" value={accountEmail} onChange={e=>setAccountEmail(e.target.value)} placeholder="you@example.com"/></label><label>Password<input type="password" autoComplete={accountMode==="login"?"current-password":"new-password"} value={accountPassword} onChange={e=>setAccountPassword(e.target.value)} placeholder={accountMode==="login"?"Your password":"At least 12 characters"}/></label>{accountError&&<p className="accountError" role="alert">{accountError}</p>}<button className="accountSubmit" disabled={accountBusy||!accountEmail||!accountPassword} onClick={submitAccount}>{accountBusy?"Please wait…":accountMode==="login"?"Sign in":"Create account"}</button><button className="accountSwitch" onClick={()=>{setAccountMode(accountMode==="login"?"register":"login");setAccountError("");}}>{accountMode==="login"?"New to OPTIMUS? Create an account":"Already have an account? Sign in"}</button><p className="accountFine">Use a unique password. Email verification and password recovery will be added before public launch.</p></>}</section></div>}
-    {active&&<div className="modalBackdrop" onClick={()=>setActive(null)}><section className="detailModal" role="dialog" aria-modal="true" aria-label={active.name} onClick={e=>e.stopPropagation()}><button className="closeModal" onClick={()=>setActive(null)} aria-label="Close"><X/></button><div className="detailHero">{(active.backdropUrl||active.imageUrl)&&<img src={image(active.backdropUrl||active.imageUrl,active.backdropUrl?"w1280":"w780")} alt=""/>}<div/></div><div className="detailContent"><div className="eyebrow">{active.type==="series"?"SERIES":"FILM"} · {active.year||"YEAR UNKNOWN"} · {active.rating||"UNRATED"}</div><h2>{active.name}</h2><p>{active.synopsis}</p><div className="detailProviders"><span>INCLUDED WITH</span>{active.offers.map(o=><b key={o.providerId}>{providerName(o.providerId)}</b>)}</div><button className="goldButton" onClick={()=>toggleSaved(active)}>{isSaved(active.id)?<Check size={16}/>:<Bookmark size={16}/>} {isSaved(active.id)?"Saved to watchlist":"Add to watchlist"}</button></div></section></div>}
+    {active&&<div className="modalBackdrop" onClick={()=>setActive(null)}><section className="detailModal" role="dialog" aria-modal="true" aria-label={active.name} onClick={e=>e.stopPropagation()}><button className="closeModal" onClick={()=>setActive(null)} aria-label="Close"><X/></button><div className="detailHero">{(active.backdropUrl||active.imageUrl)&&<img src={image(active.backdropUrl||active.imageUrl,active.backdropUrl?"w1280":"w780")} alt=""/>}<div/></div><div className="detailContent"><div className="eyebrow">{active.type==="series"?"SERIES":"FILM"} · {active.year||"YEAR UNKNOWN"} · {active.rating||"UNRATED"}</div><h2>{active.name}</h2><p>{active.synopsis}</p><div className="detailProviders"><span>INCLUDED WITH</span>{active.offers.map(o=><b key={o.providerId}>{providerName(o.providerId)}</b>)}</div><div className="watchActions">{active.offers.filter(o=>o.offerType==="subscription").map(o=>{const url=providerWatchUrl(o.providerId,active.name);return url?<a className="watchButton" key={o.providerId} href={url} target="_blank" rel="noopener noreferrer"><Tv size={15}/> Watch on {providerName(o.providerId)}</a>:null;})}</div><button className="goldButton" onClick={()=>toggleSaved(active)}>{isSaved(active.id)?<Check size={16}/>:<Bookmark size={16}/>} {isSaved(active.id)?"Saved to watchlist":"Add to watchlist"}</button></div></section></div>}
   </div>;
 }
