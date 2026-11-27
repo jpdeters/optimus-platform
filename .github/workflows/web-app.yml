@@ -47,3 +47,8 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Smoke test deployed OPTIMUS app and API proxy
+        run: |
+          curl -fsS https://optimus-bud.pages.dev/ | grep -q "OPTIMUS"
+          curl -fsS https://optimus-bud.pages.dev/api/health | jq -e '.status == "ok" and .service == "optimus-api"'
+          curl -fsS https://optimus-bud.pages.dev/api/providers | jq -e '.items | length > 0'
