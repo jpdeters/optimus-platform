@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bookmark, Check, ChevronDown, ChevronLeft, ChevronRight, Clapperboard, Compass, Film, Search, Settings2, Sparkles, Tv, X } from "lucide-react";
+import { Bookmark, Check, ChevronDown, ChevronRight, Clapperboard, Compass, Film, Search, Settings2, Sparkles, Tv, X, UserRound, LogOut } from "lucide-react";
 import type { CatalogTitle, Provider } from "@optimus/shared";
 
 type Section = "discover" | "services" | "library";
@@ -21,6 +21,14 @@ export default function App() {
   const [providerLoading,setProviderLoading]=useState(true);
   const [loading,setLoading]=useState(false);
   const [type,setType]=useState<"all"|"movie"|"series">("all");
+  const [account,setAccount]=useState<string|null>(null);
+  const [accountOpen,setAccountOpen]=useState(false);
+  const [accountMode,setAccountMode]=useState<"login"|"register">("login");
+  const [accountEmail,setAccountEmail]=useState("");
+  const [accountPassword,setAccountPassword]=useState("");
+  const [accountError,setAccountError]=useState("");
+  const [accountBusy,setAccountBusy]=useState(false);
+  const [profileReady,setProfileReady]=useState(false);
 
   useEffect(()=>{const c=new AbortController();fetch("/api/providers",{signal:c.signal}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||"Unable to load services");return d;}).then(d=>{setProviders(Array.isArray(d.items)?d.items:[]);setError("");}).catch(e=>{if(e.name!=="AbortError")setError(e.message||"Unable to load services");}).finally(()=>{if(!c.signal.aborted)setProviderLoading(false);});return()=>c.abort();},[]);
   useEffect(()=>{localStorage.setItem("optimus-services",JSON.stringify(selected));},[selected]);
