@@ -257,6 +257,13 @@ sub renderCurrentView()
                 if hasValue(m.watchlist, id) then title = "★  " + title
                 child.title = title
                 child.description = readString(item, "synopsis")
+                posterPath = readString(item, "imageUrl")
+                if posterPath <> "" and Left(posterPath, 4) <> "http"
+                    child.hdPosterUrl = "https://image.tmdb.org/t/p/w500" + posterPath
+                else if posterPath <> ""
+                    child.hdPosterUrl = posterPath
+                end if
+                child.shortDescriptionLine1 = readString(item, "year") + "  ·  " + readString(item, "rating")
                 m.visibleIds.Push(id)
             end if
         end for
