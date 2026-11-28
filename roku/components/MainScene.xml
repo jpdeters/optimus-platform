@@ -3,38 +3,38 @@
 <script type="text/brightscript" uri="pkg:/source/config.brs" />
 <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
 <children>
-<Rectangle width="1280" height="720" color="#101114" />
-<Rectangle width="1280" height="3" color="#B7A47E" />
-<Rectangle width="1280" height="1" translation="[0,138]" color="#303035" />
+<Rectangle width="1280" height="720" color="#061329" />
+<Rectangle width="1280" height="210" color="#0A1B35" />
+<Rectangle width="4" height="720" color="#36BDF2" />
 <Group id="browseGroup">
-<Poster id="brandMark" uri="pkg:/images/optimus-emblem.png" width="108" height="108" loadWidth="144" loadHeight="144" loadDisplayMode="scaleToFit" translation="[58,12]" />
-<Label id="brand" text="OPTIMUS" translation="[176,30]" width="700" height="65" color="#F1F0EC" font="font:LargeBoldSystemFont" />
-<Label id="tagline" text="YOUR STREAMING COMPANION" translation="[180,91]" width="700" height="28" color="#AAA8A1" font="font:SmallSystemFont" />
-<Rectangle width="7" height="42" translation="[70,176]" color="#B7A47E" />
-<Label id="section" text="DISCOVER" translation="[92,170]" width="700" height="45" color="#B7A47E" font="font:MediumBoldSystemFont" />
-<Label id="status" text="Connecting to OPTIMUS..." translation="[74,222]" width="1100" height="35" color="#AAA8A1" />
-<Label id="pairCode" text="" translation="[74,265]" width="1100" height="110" color="#B7A47E" font="font:LargeBoldSystemFont" wrap="true" visible="false" />
-<Timer id="pairTimer" duration="2" repeat="true" />
-<MarkupGrid id="titles" translation="[70,270]" width="1120" height="310" itemSize="[250,292]" numColumns="4" numRows="1" itemComponentName="PosterCard" focusable="true" itemSpacing="[18,18]" />
-<Rectangle width="1140" height="2" translation="[70,625]" color="#303035" />
-<Label id="detailHint" text="OK: Details   ·   OPTIONS: My Services / Watchlist     BACK: Return" translation="[74,645]" width="1120" height="40" color="#8C8A84" />
-<Rectangle width="48" height="4" translation="[70,704]" color="#B7A47E" />
-<Rectangle width="48" height="4" translation="[118,704]" color="#8C8A84" />
-<Rectangle width="48" height="4" translation="[166,704]" color="#8C8A84" />
-<Rectangle width="48" height="4" translation="[214,704]" color="#8C8A84" />
+  <Poster id="brandMark" uri="pkg:/images/optimus-emblem.png" width="54" height="54" loadWidth="96" loadHeight="96" loadDisplayMode="scaleToFit" translation="[42,25]" />
+  <Label id="brand" text="OPTIMUS" translation="[108,25]" width="400" height="42" color="#F1F7FF" font="font:LargeBoldSystemFont" />
+  <Label id="tagline" text="YOUR STREAMING COMPANION" translation="[110,67]" width="520" height="26" color="#9AAFC9" font="font:SmallSystemFont" />
+  <Label id="section" text="DISCOVER" translation="[330,124]" width="700" height="42" color="#36BDF2" font="font:MediumBoldSystemFont" />
+  <Label id="status" text="Connecting to OPTIMUS..." translation="[330,166]" width="880" height="30" color="#9AAFC9" />
+  <Rectangle width="250" height="1" translation="[42,112]" color="#244366" />
+  <Label id="railHeading" text="YOUR SPACE" translation="[48,138]" width="220" height="25" color="#8BA9CA" font="font:SmallBoldSystemFont" />
+  <LabelList id="navList" translation="[38,176]" itemSize="[250,52]" numRows="4" color="#BBD0E8" focusedColor="#EAF8FF" />
+  <Label id="pairCode" text="" translation="[330,210]" width="850" height="80" color="#36BDF2" font="font:LargeBoldSystemFont" wrap="true" visible="false" />
+  <Timer id="pairTimer" duration="2" repeat="true" />
+  <MarkupGrid id="titles" translation="[330,220]" width="900" height="410" itemSize="[166,390]" numColumns="5" numRows="1" itemComponentName="PosterCard" focusable="true" itemSpacing="[14,12]" />
+  <Rectangle width="250" height="1" translation="[42,644]" color="#244366" />
+  <Label id="railFoot" text="ONE PLACE. ALL YOUR SERVICES." translation="[48,660]" width="245" height="26" color="#6685A8" font="font:SmallSystemFont" />
+  <Rectangle width="900" height="1" translation="[330,650]" color="#244366" />
+  <Label id="detailHint" text="OK  Details     OPTIONS  Search / Account     BACK  Return" translation="[330,666]" width="900" height="30" color="#8BA9CA" />
 </Group>
 <Group id="detailGroup" visible="false">
-<Poster id="detailBrandMark" uri="pkg:/images/optimus-emblem.png" width="58" height="58" loadWidth="96" loadHeight="96" loadDisplayMode="scaleToFit" translation="[66,26]" />
-<Label id="detailEyebrow" text="OPTIMUS  /  TITLE DETAILS" translation="[140,43]" width="900" height="35" color="#B7A47E" />
-<Label id="detailTitle" text="" translation="[74,105]" width="1120" height="80" color="#F4F8FF" font="font:LargeBoldSystemFont" />
-<Label id="detailMeta" text="" translation="[74,205]" width="1120" height="45" color="#C9C6BE" font="font:MediumSystemFont" />
-<Label id="detailGenres" text="" translation="[74,265]" width="1120" height="45" color="#AAA8A1" />
-<Label id="detailSynopsis" text="" translation="[74,320]" width="1120" height="125" color="#F1F0EC" wrap="true" />
-<Label id="detailAvailabilityHeader" text="WHERE TO WATCH" translation="[74,455]" width="800" height="30" color="#59D6FF" font="font:MediumBoldSystemFont" />
-<Label id="detailAvailability" text="" translation="[74,490]" width="1120" height="70" color="#DCEAFF" wrap="true" />
-<Label id="detailWatchHeader" text="OPEN A STREAMING SERVICE" translation="[74,570]" width="1000" height="28" color="#B7A47E" font="font:MediumBoldSystemFont" />
-<LabelList id="launchOptions" translation="[70,602]" itemSize="[620,38]" numRows="1" color="#DCEAFF" focusedColor="#69E0FF" />
-<Label id="detailBack" text="BACK  ·  Return to Discover     OPTIONS  ·  Save / Remove Watchlist" translation="[74,680]" width="1120" height="25" color="#8EA8C6" />
+  <Poster id="detailBrandMark" uri="pkg:/images/optimus-emblem.png" width="52" height="52" loadWidth="96" loadHeight="96" loadDisplayMode="scaleToFit" translation="[48,24]" />
+  <Label id="detailEyebrow" text="OPTIMUS  /  TITLE DETAILS" translation="[112,35]" width="900" height="35" color="#36BDF2" />
+  <Label id="detailTitle" text="" translation="[62,108]" width="1120" height="76" color="#F4F8FF" font="font:LargeBoldSystemFont" />
+  <Label id="detailMeta" text="" translation="[62,196]" width="1120" height="42" color="#C9D9EB" font="font:MediumSystemFont" />
+  <Label id="detailGenres" text="" translation="[62,250]" width="1120" height="40" color="#9AAFC9" />
+  <Label id="detailSynopsis" text="" translation="[62,305]" width="1080" height="126" color="#E7F0FB" wrap="true" />
+  <Label id="detailAvailabilityHeader" text="WHERE TO WATCH" translation="[62,448]" width="800" height="30" color="#36BDF2" font="font:MediumBoldSystemFont" />
+  <Label id="detailAvailability" text="" translation="[62,484]" width="1120" height="72" color="#DCEAFF" wrap="true" />
+  <Label id="detailWatchHeader" text="OPEN A STREAMING SERVICE" translation="[62,565]" width="1000" height="28" color="#8C7BFF" font="font:MediumBoldSystemFont" />
+  <LabelList id="launchOptions" translation="[58,598]" itemSize="[620,38]" numRows="1" color="#DCEAFF" focusedColor="#69E0FF" />
+  <Label id="detailBack" text="BACK  Return to Discover       OPTIONS  Save / Remove Watchlist" translation="[62,680]" width="1120" height="25" color="#8EA8C6" />
 </Group>
 <KeyboardDialog id="searchDialog" title="Search OPTIMUS" visible="false" />
 </children>
