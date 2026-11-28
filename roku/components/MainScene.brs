@@ -16,6 +16,7 @@ sub init()
     m.pairTimer = m.top.findNode("pairTimer")
     m.pairTimer.observeField("fire", "onPairTimer")
     m.authToken = ""
+    m.profileNeedsInit = false
     m.pairDeviceCode = ""
     m.pairPolling = false
     m.watchlistTitles = []
@@ -181,6 +182,10 @@ sub showCatalogResponse(code as Integer, parsed as Dynamic)
     if items = invalid then items = []
     m.catalogItems = items
     m.status.text = items.Count().ToStr() + " titles available across your selected services"
+    if m.profileNeedsInit and m.authToken <> ""
+        m.profileNeedsInit = false
+        saveProfile()
+    end if
     renderCurrentView()
 end sub
 
@@ -287,7 +292,9 @@ sub renderCurrentView()
             end if
         end if
 
-        for each item in m.catalogItems
+        itemsToRender = m.catalogItems
+        if m.currentView = "watchlist" then itemsToRender = m.watchlistTitles
+        for each item in itemsToRender
             id = readString(item, "id")
             showItem = true
             if m.currentView = "watchlist" and not hasValue(m.watchlist, id) then showItem = false
@@ -397,6 +404,9 @@ end sub
 
 function findCatalogItem(id as String) as Dynamic
     for each item in m.catalogItems
+        if readString(item, "id") = id then return item
+    end for
+    for each item in m.watchlistTitles
         if readString(item, "id") = id then return item
     end for
     return invalid
@@ -572,6 +582,7 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
 
     if key = "search"
         m.searchDialog.text = m.searchQuery
+        m.top.dialog = m.searchDialog
         m.searchDialog.visible = true
         m.searchDialog.setFocus(true)
         return true
@@ -662,7 +673,10 @@ sub showProfile(code as Integer, data as Dynamic)
         return
     end if
     profile = data.profile
-    if profile <> invalid
+    if profile = invalid
+        m.profileNeedsInit = true
+    else
+        m.profileNeedsInit = false
         if profile.providers <> invalid then m.services = profile.providers
         m.watchlist = []
         m.watchlistTitles = []
