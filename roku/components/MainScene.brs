@@ -21,6 +21,7 @@ sub init()
     m.pairPolling = false
     m.watchlistTitles = []
     m.searchDialog = m.top.findNode("searchDialog")
+    m.searchDialog.visible = false
     m.searchDialog.buttons = ["Search", "Cancel"]
     m.searchDialog.observeField("buttonSelected", "onSearchButton")
     m.searchQuery = ""
@@ -344,7 +345,7 @@ sub renderCurrentView()
 
     m.list.content = content
     m.list.visible = true
-    if m.currentView = "account" then m.list.setFocus(true) else m.list.setFocus(true)
+    m.list.setFocus(true)
 end sub
 
 sub onListSelected()
@@ -585,7 +586,8 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         return false
     end if
 
-    if key = "search"
+    if key = "search" and m.browseGroup.visible and m.currentView <> "account"
+        m.searchDialog.visible = false
         m.searchDialog.text = m.searchQuery
         m.top.dialog = m.searchDialog
         m.searchDialog.visible = true
