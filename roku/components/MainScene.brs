@@ -8,6 +8,7 @@ sub init()
     m.detailGroup = m.top.findNode("detailGroup")
     m.detailEyebrow = m.top.findNode("detailEyebrow")
     m.detailTitle = m.top.findNode("detailTitle")
+    m.detailPoster = m.top.findNode("detailPoster")
     m.detailMeta = m.top.findNode("detailMeta")
     m.detailGenres = m.top.findNode("detailGenres")
     m.detailSynopsis = m.top.findNode("detailSynopsis")
@@ -27,6 +28,7 @@ sub init()
     m.searchDialog.buttons = ["Search", "Cancel"]
     m.searchDialog.observeField("buttonSelected", "onSearchButton")
     m.searchQuery = ""
+    m.providerQuery = ""
 
     m.launchIds = []
     m.launchTask = CreateObject("roSGNode", "LaunchTask")
@@ -282,12 +284,14 @@ sub renderCurrentView()
         m.section.text = "MY SERVICES  ·  SELECT YOUR SUBSCRIPTIONS"
         m.status.text = "OK toggles a service. Selection is saved on this Roku."
         for each provider in m.providers
-            child = content.createChild("ContentNode")
+            if m.providerQuery = "" or Instr(1, LCase(provider.name), LCase(m.providerQuery)) > 0
+                child = content.createChild("ContentNode")
             selectionLabel = "ADD SERVICE"
             if hasValue(m.services, provider.id) then selectionLabel = "✓ SELECTED"
             child.title = provider.name
             child.shortDescriptionLine1 = selectionLabel
             m.visibleIds.Push(provider.id)
+            end if
         end for
         if m.visibleIds.Count() = 0
             child = content.createChild("ContentNode")
@@ -415,6 +419,14 @@ sub openSelectedTitle()
         detailTitle = readString(item, "name")
         if detailTitle = "" then detailTitle = readString(item, "title")
         m.detailTitle.text = detailTitle
+        posterPath = readString(item, "imageUrl")
+        if posterPath = "" then posterPath = readString(item, "backdropUrl")
+        if posterPath <> "" and Left(posterPath, 4) <> "http"
+            m.detailPoster.uri = "https://image.tmdb.org/t/p/w500" + posterPath
+        else
+            m.detailPoster.uri = posterPath
+        end if
+        m.detailPoster.visible = (posterPath <> "")
         m.detailMeta.text = UCase(readString(item, "type")) + "  ·  " + readString(item, "year") + "  ·  " + readString(item, "rating")
         runtime = readString(item, "runtime")
         seasons = readString(item, "seasons")
@@ -426,6 +438,7 @@ sub openSelectedTitle()
         renderLaunchOptions(item)
     else
         m.detailTitle.text = "Loading title..."
+        m.detailPoster.visible = false
         m.detailMeta.text = ""
         m.detailGenres.text = ""
         m.detailSynopsis.text = ""
@@ -763,9 +776,14 @@ end sub
 
 sub onSearchButton()
     if m.searchDialog.buttonSelected = 0
-        m.searchQuery = m.searchDialog.text
-        m.currentView = "discover"
-        loadCatalog()
+        if m.currentView = "services"
+            m.providerQuery = m.searchDialog.text
+            renderCurrentView()
+        else
+            m.searchQuery = m.searchDialog.text
+            m.currentView = "discover"
+            loadCatalog()
+        end if
     end if
     m.searchDialog.visible = false
     m.list.setFocus(true)
