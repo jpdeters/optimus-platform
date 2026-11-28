@@ -1,0 +1,49 @@
+name: Package OPTIMUS Roku
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [release/mvp-stabilization]
+    paths:
+      - 'roku/**'
+      - '.github/workflows/package-roku.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release
+        uses: actions/checkout@v4
+
+      - name: Validate Roku package contents
+        run: |
+          set -euo pipefail
+          test -f roku/manifest
+          test -f roku/source/config.brs
+          test -f roku/components/MainScene.xml
+          command -v xmllint >/dev/null || (sudo apt-get update && sudo apt-get install -y libxml2-utils)
+          while IFS= read -r -d '' file; do
+            xmllint --noout "$file"
+          done < <(find roku -type f -name '*.xml' -print0)
+          echo "Roku manifest and XML components validated."
+
+      - name: Build sideload ZIP
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          (cd roku && zip -qr ../dist/optimus-roku-sideload.zip .)
+          unzip -l dist/optimus-roku-sideload.zip
+          unzip -Z1 dist/optimus-roku-sideload.zip | grep -qx 'manifest'
+          unzip -Z1 dist/optimus-roku-sideload.zip | grep -qx 'components/MainScene.xml'
+          echo "Sideload ZIP has manifest and SceneGraph files at archive root."
+
+      - name: Upload sideload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: optimus-roku-sideload
+          path: dist/optimus-roku-sideload.zip
+          if-no-files-found: error
+          retention-days: 14
