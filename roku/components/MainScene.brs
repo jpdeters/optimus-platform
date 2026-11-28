@@ -272,10 +272,10 @@ sub renderCurrentView()
         m.status.text = "OK toggles a service. Selection is saved on this Roku."
         for each provider in m.providers
             child = content.createChild("ContentNode")
-            prefix = "[ ] "
-            if hasValue(m.services, provider.id) then prefix = "[X] "
+            selectionLabel = "ADD SERVICE"
+            if hasValue(m.services, provider.id) then selectionLabel = "✓ SELECTED"
             child.title = provider.name
-            child.shortDescriptionLine1 = prefix + "SELECTED"
+            child.shortDescriptionLine1 = selectionLabel
             m.visibleIds.Push(provider.id)
         end for
         if m.visibleIds.Count() = 0
@@ -605,6 +605,14 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         end if
         renderCurrentView()
         return true
+    else if key = "back" and m.currentView = "account" and m.pairDeviceCode <> ""
+        m.pairTimer.control = "STOP"
+        m.pairDeviceCode = ""
+        m.pairPolling = false
+        m.pairCodeLabel.visible = false
+        m.list.visible = true
+        m.status.text = "Pairing cancelled."
+        return true
     else if key = "back" and m.currentView <> "discover"
         m.currentView = "discover"
         loadCatalog()
@@ -633,6 +641,8 @@ sub showPairStart(code as Integer, data as Dynamic)
     end if
     m.pairCodeLabel.text = "GO TO OPTIMUS ON YOUR PHONE OR COMPUTER\nOPEN YOUR ACCOUNT → CONNECT YOUR ROKU\n\n" + userCode
     m.pairCodeLabel.visible = true
+    m.list.visible = false
+    m.top.setFocus(true)
     m.status.text = "This code expires in 10 minutes. Waiting for approval..."
     m.pairPolling = false
     m.pairTimer.control = "START"
@@ -653,6 +663,8 @@ sub showPairPoll(code as Integer, data as Dynamic)
         m.pairPolling = false
         m.status.text = "Pairing expired or failed. Select Connect account to try again."
         m.pairDeviceCode = ""
+        m.pairCodeLabel.visible = false
+        m.list.visible = true
         return
     end if
     token = readString(data, "token")
@@ -664,6 +676,7 @@ sub showPairPoll(code as Integer, data as Dynamic)
     m.registry.Write("authToken", token)
     m.registry.Flush()
     m.pairCodeLabel.visible = false
+    m.list.visible = true
     m.status.text = "Account connected. Loading your services and watchlist..."
     loadProfile()
 end sub
