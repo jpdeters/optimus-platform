@@ -57,3 +57,41 @@
 .watchActions{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0 22px}
 .watchButton{display:inline-flex;align-items:center;gap:8px;padding:10px 13px;border:1px solid #b99f6e88;border-radius:7px;background:#b99f6e12;color:#e7d8b9;text-decoration:none;font-size:10px;font-weight:650;transition:background .2s,border-color .2s,transform .2s}
 .watchButton:hover{background:#b99f6e25;border-color:var(--gold);transform:translateY(-1px)}
+
+/* OPTIMUS identity refresh — midnight blue, spectral gradient, crisp white */
+:root{color-scheme:dark;--bg:#061329;--panel:#0a1b35;--panel2:#102544;--line:#70b9ff20;--muted:#9aafc9;--gold:#36bdf2;--gold2:#8c7bff}
+body{background:radial-gradient(ellipse at 72% -12%,#123d6b 0%,transparent 42%),linear-gradient(145deg,#061329,#040d20 72%)}
+.sidebar{background:linear-gradient(180deg,#071a34f5,#061329f7);border-right-color:#37b8ff24}
+.brandLogo{display:block;width:100%;max-width:194px;height:auto;object-fit:contain}
+.wordmark{padding:0 2px;display:block}
+.mobileBrand{gap:0}
+.mobileLogo{display:block;width:136px;height:auto;max-height:42px;object-fit:contain;object-position:left center}
+.topbar{background:#07172de8;border-bottom-color:#38baff20}
+.mainPanel{background:transparent}
+.sideNav button:hover,.sideNav button.selected{background:linear-gradient(90deg,#178bd51c,#8a5cff12);color:#f3f8ff;border-color:#54caff28}
+.sideNav button.selected{box-shadow:inset 2px 0 #3bc8ff}
+.sideLabel,.eyebrow,.resultsLabel{color:#52c9ff}
+.sideLabel{color:#8ba9ca}
+.servicePill,.accountPill{background:#102744;border-color:#43bdf044;color:#d9efff}
+.servicePill:hover,.accountPill:hover{border-color:#4fcfff;background:#153354}
+.accountPill{color:#e5f3ff}
+.goldButton,.accountSubmit{background:linear-gradient(105deg,#28c8ef 0%,#4389ff 48%,#a35cf4 100%);border:1px solid #64c9ff;color:#061329;box-shadow:0 5px 20px #277edb35}
+.goldButton:hover,.accountSubmit:hover{background:linear-gradient(105deg,#55dcff,#6ba6ff 50%,#bd79ff);border-color:#9ce8ff}
+.goldButton:focus-visible,.accountSubmit:focus-visible,.serviceGrid button.chosen{outline-color:#48d5ff}
+.serviceGrid button.chosen{background:linear-gradient(110deg,#168bc52a,#8a52d91c);border-color:#43c8ff;color:#effaff}
+.serviceGrid button:hover,.searchBar:focus-within,.providerSearch:focus-within{border-color:#45c8ff88;box-shadow:0 0 0 3px #32bdf014}
+.typeFilters button.active{color:#c7eaff;background:#279fe51c;border-color:#43c8ff48}
+.editServices,.textButton,.accountSwitch{color:#61caff}
+.accountModal,.detailModal{background:#0b1d37;border-color:#54bfff38}
+.accountModal label{color:#a7d9f4}
+.accountModal label input{background:#06152b;border-color:#3d83b833}
+.accountModal label input:focus{border-color:#46caff}
+.watchButton{border-color:#48bdfd88;background:linear-gradient(110deg,#1ba8e51b,#8e55ef18);color:#d9f4ff}
+.watchButton:hover{background:linear-gradient(110deg,#1ba8e535,#8e55ef30);border-color:#7ddcff}
+.posterCard:hover .artwork{box-shadow:0 16px 34px #0009,0 0 0 1px #39bfffa0}
+.saveButton.isSaved{color:#69d9ff;border-color:#69d9ff}
+.typeTag{background:#071a32e8;color:#bdeaff;border:1px solid #4bc7ff55}
+.providerDots span{color:#b9dfff;border-color:#51bfff55;background:#249ce811}
+.mainPanel footer span:first-child{color:#57caff}
+.spinner{border-top-color:#55d2ff}
+@media(max-width:620px){.mobileLogo{width:126px;max-height:39px}}
