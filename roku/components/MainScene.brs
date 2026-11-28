@@ -686,7 +686,15 @@ sub loadProfile()
 end sub
 
 sub showProfile(code as Integer, data as Dynamic)
-    if code < 200 or code >= 300
+    if code = 401
+        m.authToken = ""
+        m.registry.Write("authToken", "")
+        m.registry.Flush()
+        m.currentView = "account"
+        m.status.text = "Your OPTIMUS device session expired. Connect your account again."
+        renderCurrentView()
+        return
+    else if code < 200 or code >= 300
         m.status.text = "Your account connected, but its profile could not be loaded."
         return
     end if
