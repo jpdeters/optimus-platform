@@ -2,6 +2,8 @@ sub init()
     m.status = m.top.findNode("status")
     m.section = m.top.findNode("section")
     m.list = m.top.findNode("titles")
+    m.navList = m.top.findNode("navList")
+    m.navList.observeField("itemSelected", "onNavSelected")
     m.browseGroup = m.top.findNode("browseGroup")
     m.detailGroup = m.top.findNode("detailGroup")
     m.detailEyebrow = m.top.findNode("detailEyebrow")
@@ -256,6 +258,14 @@ function availabilityLabel(item as Object) as String
 end function
 
 sub renderCurrentView()
+    navContent = CreateObject("roSGNode", "ContentNode")
+    navLabels = ["Discover", "My watchlist", "My services", "Account"]
+    for each navLabel in navLabels
+        navChild = navContent.createChild("ContentNode")
+        navChild.title = navLabel
+    end for
+    m.navList.content = navContent
+
     content = CreateObject("roSGNode", "ContentNode")
     m.visibleIds = []
 
@@ -347,6 +357,24 @@ sub renderCurrentView()
     m.list.content = content
     m.list.visible = true
     m.list.setFocus(true)
+end sub
+
+sub onNavSelected()
+    index = m.navList.itemSelected
+    if index = invalid then return
+    if index = 0
+        m.currentView = "discover"
+        loadCatalog()
+    else if index = 1
+        m.currentView = "watchlist"
+        renderCurrentView()
+    else if index = 2
+        m.currentView = "services"
+        renderCurrentView()
+    else if index = 3
+        m.currentView = "account"
+        renderCurrentView()
+    end if
 end sub
 
 sub onListSelected()
@@ -563,15 +591,6 @@ sub closeDetailView()
     m.detailGroup.visible = false
     m.browseGroup.visible = true
     m.currentRequest = "catalog"
-    renderCurrentView()
-end sub
-
-sub showDemoTitles()
-    m.catalogItems = [
-        {id:"demo-001", name:"The Last Meridian", type:"series", year:2025, rating:"TV-14", seasons:2, genres:["Drama","Mystery"], synopsis:"A remote coastal town discovers its newest arrival knows more about its history than anyone should.", offers:[{providerId:"stream-a",offerType:"subscription"},{providerId:"stream-c",offerType:"rent"}]},
-        {id:"demo-002", name:"Orbit of Ash", type:"movie", year:2024, rating:"PG-13", runtime:"2h 08m", genres:["Science Fiction","Adventure"], synopsis:"A salvage crew follows a mysterious signal beyond the edge of a mapped solar system.", offers:[{providerId:"stream-b",offerType:"subscription"}]},
-        {id:"demo-003", name:"Small Hours", type:"series", year:2026, rating:"TV-MA", seasons:1, genres:["Comedy","Drama"], synopsis:"Three night-shift coworkers build an unlikely friendship while keeping a city hotel running.", offers:[{providerId:"stream-a",offerType:"subscription"}]}
-    ]
     renderCurrentView()
 end sub
 
