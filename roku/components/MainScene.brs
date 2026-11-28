@@ -12,6 +12,10 @@ sub init()
     m.detailAvailability = m.top.findNode("detailAvailability")
     m.detailWatchHeader = m.top.findNode("detailWatchHeader")
     m.launchOptions = m.top.findNode("launchOptions")
+    m.searchDialog = m.top.findNode("searchDialog")
+    m.searchDialog.buttons = ["Search", "Cancel"]
+    m.searchDialog.observeField("buttonSelected", "onSearchButton")
+    m.searchQuery = ""
 
     m.launchIds = []
     m.launchTask = CreateObject("roSGNode", "LaunchTask")
@@ -115,7 +119,12 @@ sub loadCatalog()
         serviceQuery = serviceQuery + id
     end for
     m.status.text = "Finding titles on your services..."
-    runApiRequest("catalog", base + OptimusApiPath() + "?providers=" + serviceQuery)
+    searchSuffix = ""
+    if m.searchQuery <> ""
+        encoder = CreateObject("roUrlTransfer")
+        searchSuffix = "&q=" + encoder.Escape(m.searchQuery)
+    end if
+    runApiRequest("catalog", base + OptimusApiPath() + "?providers=" + serviceQuery + searchSuffix)
 end sub
 
 sub runApiRequest(requestType as String, url as String)
@@ -512,7 +521,12 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         return false
     end if
 
-    if key = "options"
+    if key = "search"
+        m.searchDialog.text = m.searchQuery
+        m.searchDialog.visible = true
+        m.searchDialog.setFocus(true)
+        return true
+    else if key = "options"
         if m.currentView = "discover"
             m.currentView = "services"
         else if m.currentView = "services"
@@ -531,3 +545,13 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     end if
     return false
 end function
+
+sub onSearchButton()
+    if m.searchDialog.buttonSelected = 0
+        m.searchQuery = m.searchDialog.text
+        m.currentView = "discover"
+        loadCatalog()
+    end if
+    m.searchDialog.visible = false
+    m.list.setFocus(true)
+end sub
