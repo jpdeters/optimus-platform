@@ -12,6 +12,6 @@ sub executeRequest()
     body = transfer.GetToString()
     code = transfer.GetResponseCode()
 
-    m.top.responseCode = code
     m.top.responseBody = body
+    m.top.responseCode = code
 end sub

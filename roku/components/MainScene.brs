@@ -19,7 +19,7 @@ sub init()
     m.top.appendChild(m.launchTask)
 
     m.apiTask = CreateObject("roSGNode", "ApiTask")
-    m.apiTask.observeField("responseBody", "onApiResponse")
+    m.apiTask.observeField("responseCode", "onApiResponse")
     m.top.appendChild(m.apiTask)
     m.list.observeField("itemSelected", "onListSelected")
     m.launchOptions.observeField("itemSelected", "onLaunchSelected")
