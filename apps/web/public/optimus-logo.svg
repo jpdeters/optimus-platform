@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250">
+<defs>
+ <linearGradient id="spectral" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#22d8f4"/><stop offset=".34" stop-color="#477cff"/><stop offset=".62" stop-color="#bd48db"/><stop offset="1" stop-color="#ff8a36"/></linearGradient>
+ <linearGradient id="word" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#a8c7ef"/></linearGradient>
+ <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="720" height="250" fill="none"/>
+<g transform="translate(360 82)" filter="url(#glow)">
+ <circle r="55" fill="none" stroke="url(#spectral)" stroke-width="7" stroke-dasharray="285 62" transform="rotate(-45)"/>
+ <circle r="44" fill="none" stroke="url(#spectral)" stroke-width="4" opacity=".85" stroke-dasharray="220 58" transform="rotate(35)"/>
+ <path d="M-10 -28 L30 0 L-10 28 Z" fill="none" stroke="url(#spectral)" stroke-width="9" stroke-linejoin="round"/>
+</g>
+<text x="360" y="184" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="66" font-weight="800" letter-spacing="1" fill="url(#word)">OPTIMUS</text>
+<text x="360" y="222" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" letter-spacing="3.5" fill="#c9ddf7">YOUR STREAMING COMPANION</text>
+</svg>
