@@ -12,6 +12,7 @@ sub executeRequest()
     transfer.InitClientCertificates()
     transfer.AddHeader("Accept", "application/json")
     transfer.AddHeader("User-Agent", "OptimusRoku/1.0 (Roku)")
+    if m.top.authToken <> "" then transfer.AddHeader("Authorization", "Bearer " + m.top.authToken)
     transfer.EnableEncodings(true)
     transfer.RetainBodyOnError(true)
     transfer.SetUrl(m.top.requestUrl)
@@ -19,7 +20,15 @@ sub executeRequest()
 
     ' Use the asynchronous API with a hard deadline. GetToString() can block
     ' indefinitely on some network failures, leaving the Roku UI on its spinner.
-    started = transfer.AsyncGetToString()
+    method = m.top.requestMethod
+    if method = "" then method = "GET"
+    if method = "GET"
+        started = transfer.AsyncGetToString()
+    else
+        transfer.SetRequest(method)
+        transfer.AddHeader("Content-Type", "application/json")
+        started = transfer.AsyncPostFromString(m.top.requestBody)
+    end if
     if not started
         m.top.responseBody = "Could not start network request."
         m.top.responseCode = -1
