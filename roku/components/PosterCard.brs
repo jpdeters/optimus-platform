@@ -10,9 +10,9 @@ sub showContent()
   item = m.top.itemContent
   if item = invalid then return
   m.cardTitle.text = item.title
-  m.cardMeta.text = item.metaText
-  if item.posterUrl <> invalid and item.posterUrl <> ""
-    m.poster.uri = item.posterUrl
+  m.cardMeta.text = item.shortDescriptionLine1
+  if item.hdPosterUrl <> invalid and item.hdPosterUrl <> ""
+    m.poster.uri = item.hdPosterUrl
     m.poster.visible = true
   else
     m.poster.uri = ""
