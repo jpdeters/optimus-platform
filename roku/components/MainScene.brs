@@ -120,6 +120,7 @@ sub loadCatalog()
 end sub
 
 sub runApiRequest(requestType as String, url as String)
+    print "[OPTIMUS] Request (" + requestType + "): " + url
     m.currentRequest = requestType
     m.apiTask.control = "STOP"
     m.apiTask.requestUrl = url
@@ -128,6 +129,8 @@ sub runApiRequest(requestType as String, url as String)
 end sub
 
 sub onApiResponse()
+    if not m.apiTask.responseComplete then return
+    print "[OPTIMUS] Response (" + m.currentRequest + ") code=" + m.apiTask.responseCode.ToStr() + " body=" + Left(m.apiTask.responseBody, 160)
     if m.currentRequest = "providers"
         showProvidersResponse(m.apiTask.responseCode, m.apiTask.responseBody)
     else
@@ -224,6 +227,11 @@ sub renderCurrentView()
             child.title = prefix + provider.name
             m.visibleIds.Push(provider.id)
         end for
+        if m.visibleIds.Count() = 0
+            child = content.createChild("ContentNode")
+            child.title = "No streaming services returned by API."
+            m.visibleIds.Push("")
+        end if
     else
         if m.currentView = "watchlist"
             m.section.text = "MY WATCHLIST"
@@ -254,6 +262,18 @@ sub renderCurrentView()
                 m.visibleIds.Push(id)
             end if
         end for
+
+        if m.visibleIds.Count() = 0
+            child = content.createChild("ContentNode")
+            if m.currentView = "watchlist"
+                child.title = "Your watchlist is empty. Save a title from its detail page."
+            else if m.services.Count() = 0
+                child.title = "No services selected. Choose My Services to get started."
+            else
+                child.title = "No titles found for your selected services."
+            end if
+            m.visibleIds.Push("")
+        end if
         if m.currentView = "watchlist" and m.visibleIds.Count() = 0
             child = content.createChild("ContentNode")
             child.title = "Your watchlist is empty. Save a title from its detail page."
