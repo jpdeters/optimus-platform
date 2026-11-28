@@ -222,7 +222,8 @@ sub renderCurrentView()
             child = content.createChild("ContentNode")
             prefix = "[ ] "
             if hasValue(m.services, provider.id) then prefix = "[X] "
-            child.title = prefix + provider.name
+            child.title = provider.name
+            child.shortDescriptionLine1 = prefix + "SELECTED"
             m.visibleIds.Push(provider.id)
         end for
         if m.visibleIds.Count() = 0
