@@ -4,6 +4,7 @@ sub init()
   m.cardMeta = m.top.findNode("cardMeta")
   m.focusLine = m.top.findNode("focusLine")
   m.top.observeField("itemContent", "showContent")
+  m.top.observeField("itemHasFocus", "showFocus")
 end sub
 
 sub showContent()
@@ -18,4 +19,7 @@ sub showContent()
     m.poster.uri = ""
     m.poster.visible = false
   end if
+end sub
+sub showFocus()
+  m.focusLine.visible = m.top.itemHasFocus
 end sub
