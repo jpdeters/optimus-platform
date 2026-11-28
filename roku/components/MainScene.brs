@@ -622,8 +622,11 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     end if
 
     if key = "left"
-        m.navList.setFocus(true)
-        return true
+        if m.list.itemFocused MOD 5 = 0
+            m.navList.setFocus(true)
+            return true
+        end if
+        return false
     else if key = "right"
         m.list.setFocus(true)
         return true
