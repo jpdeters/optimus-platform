@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="PosterCard" extends="Group">
+  <interface>
+    <field id="itemContent" type="node" onChange="showContent" />
+  </interface>
+  <children>
+    <Rectangle id="cardBack" width="250" height="292" color="#191A1E" />
+    <Poster id="poster" translation="[0,0]" width="250" height="205" loadWidth="500" loadHeight="410" loadDisplayMode="scaleToFill" />
+    <Rectangle translation="[0,205]" width="250" height="87" color="#191A1E" />
+    <Label id="cardTitle" translation="[13,215]" width="224" height="34" color="#F1F0EC" font="font:MediumBoldSystemFont" maxLines="1" />
+    <Label id="cardMeta" translation="[13,251]" width="224" height="25" color="#AAA8A1" font="font:SmallSystemFont" />
+    <Rectangle id="focusLine" translation="[0,288]" width="250" height="4" color="#B7A47E" visible="false" />
+  </children>
+  <script type="text/brightscript" uri="pkg:/components/PosterCard.brs" />
+</component>
