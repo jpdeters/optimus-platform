@@ -2,6 +2,9 @@
 <component name="ApiTask" extends="Task">
     <interface>
         <field id="requestUrl" type="string" />
+        <field id="requestMethod" type="string" />
+        <field id="requestBody" type="string" />
+        <field id="authToken" type="string" />
         <field id="responseCode" type="integer" />
         <field id="responseBody" type="string" />
         <field id="responseData" type="assocarray" />

@@ -12,6 +12,18 @@ sub init()
     m.detailAvailability = m.top.findNode("detailAvailability")
     m.detailWatchHeader = m.top.findNode("detailWatchHeader")
     m.launchOptions = m.top.findNode("launchOptions")
+    m.pairCodeLabel = m.top.findNode("pairCode")
+    m.pairTimer = m.top.findNode("pairTimer")
+    m.pairTimer.observeField("fire", "onPairTimer")
+    m.authToken = ""
+    m.profileNeedsInit = false
+    m.pairDeviceCode = ""
+    m.pairPolling = false
+    m.watchlistTitles = []
+    m.searchDialog = m.top.findNode("searchDialog")
+    m.searchDialog.buttons = ["Search", "Cancel"]
+    m.searchDialog.observeField("buttonSelected", "onSearchButton")
+    m.searchQuery = ""
 
     m.launchIds = []
     m.launchTask = CreateObject("roSGNode", "LaunchTask")
@@ -27,6 +39,8 @@ sub init()
     m.registry = CreateObject("roRegistrySection", "optimus")
     m.services = loadRegistryList("services", [])
     m.watchlist = loadRegistryList("watchlist", [])
+    savedToken = m.registry.Read("authToken")
+    if savedToken <> invalid then m.authToken = savedToken
     m.providers = []
     m.catalogItems = []
     m.visibleIds = []
@@ -87,6 +101,10 @@ sub showProvidersResponse(code as Integer, parsed as Dynamic)
     end for
     m.services = valid
     saveRegistryList("services", m.services)
+    if m.authToken <> ""
+        loadProfile()
+        return
+    end if
     if m.services.Count() = 0 and m.providers.Count() > 0
         m.currentView = "services"
         renderCurrentView()
@@ -115,14 +133,22 @@ sub loadCatalog()
         serviceQuery = serviceQuery + id
     end for
     m.status.text = "Finding titles on your services..."
-    runApiRequest("catalog", base + OptimusApiPath() + "?providers=" + serviceQuery)
+    searchSuffix = ""
+    if m.searchQuery <> ""
+        encoder = CreateObject("roUrlTransfer")
+        searchSuffix = "&q=" + encoder.Escape(m.searchQuery)
+    end if
+    runApiRequest("catalog", base + OptimusApiPath() + "?providers=" + serviceQuery + searchSuffix)
 end sub
 
-sub runApiRequest(requestType as String, url as String)
+sub runApiRequest(requestType as String, url as String, method = "GET" as String, body = "" as String)
     print "[OPTIMUS] Request (" + requestType + "): " + url
     m.currentRequest = requestType
     m.apiTask.control = "STOP"
     m.apiTask.requestUrl = url
+    m.apiTask.requestMethod = method
+    m.apiTask.requestBody = body
+    m.apiTask.authToken = m.authToken
     m.apiTask.responseComplete = false
     m.apiTask.control = "RUN"
 end sub
@@ -132,8 +158,16 @@ sub onApiResponse()
     print "[OPTIMUS] Response (" + m.currentRequest + ") code=" + m.apiTask.responseCode.ToStr() + " body=" + Left(m.apiTask.responseBody, 160)
     if m.currentRequest = "providers"
         showProvidersResponse(m.apiTask.responseCode, m.apiTask.responseData)
-    else
+    else if m.currentRequest = "catalog"
         showCatalogResponse(m.apiTask.responseCode, m.apiTask.responseData)
+    else if m.currentRequest = "pair_start"
+        showPairStart(m.apiTask.responseCode, m.apiTask.responseData)
+    else if m.currentRequest = "pair_poll"
+        showPairPoll(m.apiTask.responseCode, m.apiTask.responseData)
+    else if m.currentRequest = "profile"
+        showProfile(m.apiTask.responseCode, m.apiTask.responseData)
+    else if m.currentRequest = "profile_save"
+        if m.apiTask.responseCode >= 200 and m.apiTask.responseCode < 300 then m.status.text = "Your OPTIMUS account is synchronized."
     end if
 end sub
 
@@ -148,6 +182,15 @@ sub showCatalogResponse(code as Integer, parsed as Dynamic)
     if items = invalid then items = []
     m.catalogItems = items
     m.status.text = items.Count().ToStr() + " titles available across your selected services"
+    if m.profileNeedsInit and m.authToken <> ""
+        m.watchlistTitles = []
+        for each savedId in m.watchlist
+            savedTitle = findCatalogItem(savedId)
+            if savedTitle <> invalid then m.watchlistTitles.Push(savedTitle)
+        end for
+        m.profileNeedsInit = false
+        saveProfile()
+    end if
     renderCurrentView()
 end sub
 
@@ -215,14 +258,24 @@ sub renderCurrentView()
     content = CreateObject("roSGNode", "ContentNode")
     m.visibleIds = []
 
-    if m.currentView = "services"
+    if m.currentView = "account"
+        m.section.text = "YOUR OPTIMUS ACCOUNT"
+        m.status.text = "Connect this Roku to the account you use on the OPTIMUS website."
+        m.pairCodeLabel.visible = false
+        child = content.createChild("ContentNode")
+        child.title = "Connect your OPTIMUS account"
+        child.shortDescriptionLine1 = "Select to generate a secure pairing code"
+        m.visibleIds.Push("connect")
+    else if m.currentView = "services"
+        m.pairCodeLabel.visible = false
         m.section.text = "MY SERVICES  ·  SELECT YOUR SUBSCRIPTIONS"
         m.status.text = "OK toggles a service. Selection is saved on this Roku."
         for each provider in m.providers
             child = content.createChild("ContentNode")
-            prefix = "[ ] "
-            if hasValue(m.services, provider.id) then prefix = "[X] "
-            child.title = prefix + provider.name
+            selectionLabel = "ADD SERVICE"
+            if hasValue(m.services, provider.id) then selectionLabel = "✓ SELECTED"
+            child.title = provider.name
+            child.shortDescriptionLine1 = selectionLabel
             m.visibleIds.Push(provider.id)
         end for
         if m.visibleIds.Count() = 0
@@ -231,6 +284,7 @@ sub renderCurrentView()
             m.visibleIds.Push("")
         end if
     else
+        m.pairCodeLabel.visible = false
         if m.currentView = "watchlist"
             m.section.text = "MY WATCHLIST"
             m.status.text = "Your saved titles on this Roku"
@@ -243,7 +297,9 @@ sub renderCurrentView()
             end if
         end if
 
-        for each item in m.catalogItems
+        itemsToRender = m.catalogItems
+        if m.currentView = "watchlist" then itemsToRender = m.watchlistTitles
+        for each item in itemsToRender
             id = readString(item, "id")
             showItem = true
             if m.currentView = "watchlist" and not hasValue(m.watchlist, id) then showItem = false
@@ -287,12 +343,18 @@ sub renderCurrentView()
     end if
 
     m.list.content = content
-    m.list.setFocus(true)
+    m.list.visible = true
+    if m.currentView = "account" then m.list.setFocus(true) else m.list.setFocus(true)
 end sub
 
 sub onListSelected()
     index = m.list.itemSelected
     if index = invalid or index < 0 or index >= m.visibleIds.Count() then return
+
+    if m.currentView = "account"
+        startPairing()
+        return
+    end if
 
     if m.currentView = "services"
         id = m.visibleIds[index]
@@ -306,6 +368,7 @@ sub onListSelected()
             m.services.Push(id)
         end if
         saveRegistryList("services", m.services)
+        if m.authToken <> "" then saveProfile()
         renderCurrentView()
         return
     end if
@@ -346,6 +409,9 @@ end sub
 
 function findCatalogItem(id as String) as Dynamic
     for each item in m.catalogItems
+        if readString(item, "id") = id then return item
+    end for
+    for each item in m.watchlistTitles
         if readString(item, "id") = id then return item
     end for
     return invalid
@@ -463,12 +529,20 @@ sub toggleWatchlist()
             if id <> m.selectedTitleId then nextList.Push(id)
         end for
         m.watchlist = nextList
+        nextTitles = []
+        for each savedItem in m.watchlistTitles
+            if readString(savedItem, "id") <> m.selectedTitleId then nextTitles.Push(savedItem)
+        end for
+        m.watchlistTitles = nextTitles
         m.detailEyebrow.text = "REMOVED FROM WATCHLIST"
     else
         m.watchlist.Push(m.selectedTitleId)
+        savedItem = findCatalogItem(m.selectedTitleId)
+        if savedItem <> invalid then m.watchlistTitles.Push(savedItem)
         m.detailEyebrow.text = "SAVED TO WATCHLIST"
     end if
     saveRegistryList("watchlist", m.watchlist)
+    if m.authToken <> "" then saveProfile()
 end sub
 
 sub openDetailView()
@@ -511,17 +585,33 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         return false
     end if
 
-    if key = "options"
+    if key = "search"
+        m.searchDialog.text = m.searchQuery
+        m.top.dialog = m.searchDialog
+        m.searchDialog.visible = true
+        m.searchDialog.setFocus(true)
+        return true
+    else if key = "options"
         if m.currentView = "discover"
             m.currentView = "services"
         else if m.currentView = "services"
             m.currentView = "watchlist"
+        else if m.currentView = "watchlist"
+            m.currentView = "account"
         else
             m.currentView = "discover"
             loadCatalog()
             return true
         end if
         renderCurrentView()
+        return true
+    else if key = "back" and m.currentView = "account" and m.pairDeviceCode <> ""
+        m.pairTimer.control = "STOP"
+        m.pairDeviceCode = ""
+        m.pairPolling = false
+        m.pairCodeLabel.visible = false
+        m.list.visible = true
+        m.status.text = "Pairing cancelled."
         return true
     else if key = "back" and m.currentView <> "discover"
         m.currentView = "discover"
@@ -530,3 +620,119 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     end if
     return false
 end function
+
+
+sub startPairing()
+    base = OptimusApiBase()
+    m.status.text = "Creating a secure device pairing code..."
+    runApiRequest("pair_start", base + "/api/device/pair", "POST", "{}")
+end sub
+
+sub showPairStart(code as Integer, data as Dynamic)
+    if code < 200 or code >= 300
+        m.status.text = "Could not start account pairing (" + code.ToStr() + ")."
+        return
+    end if
+    m.pairDeviceCode = readString(data, "deviceCode")
+    userCode = readString(data, "userCode")
+    if m.pairDeviceCode = "" or userCode = ""
+        m.status.text = "The server returned an incomplete pairing code."
+        return
+    end if
+    m.pairCodeLabel.text = "GO TO OPTIMUS ON YOUR PHONE OR COMPUTER\nOPEN YOUR ACCOUNT → CONNECT YOUR ROKU\n\n" + userCode
+    m.pairCodeLabel.visible = true
+    m.list.visible = false
+    m.top.setFocus(true)
+    m.status.text = "This code expires in 10 minutes. Waiting for approval..."
+    m.pairPolling = false
+    m.pairTimer.control = "START"
+end sub
+
+sub onPairTimer()
+    if m.pairDeviceCode = "" or m.pairPolling then return
+    m.pairPolling = true
+    body = FormatJson({ deviceCode: m.pairDeviceCode })
+    runApiRequest("pair_poll", OptimusApiBase() + "/api/device/pair/token", "POST", body)
+end sub
+
+sub showPairPoll(code as Integer, data as Dynamic)
+    m.pairPolling = false
+    if code = 202 then return
+    if code < 200 or code >= 300
+        m.pairTimer.control = "STOP"
+        m.pairPolling = false
+        m.status.text = "Pairing expired or failed. Select Connect account to try again."
+        m.pairDeviceCode = ""
+        m.pairCodeLabel.visible = false
+        m.list.visible = true
+        return
+    end if
+    token = readString(data, "token")
+    if token = "" then return
+    m.pairTimer.control = "STOP"
+    m.pairDeviceCode = ""
+    m.pairPolling = false
+    m.authToken = token
+    m.registry.Write("authToken", token)
+    m.registry.Flush()
+    m.pairCodeLabel.visible = false
+    m.list.visible = true
+    m.status.text = "Account connected. Loading your services and watchlist..."
+    loadProfile()
+end sub
+
+sub loadProfile()
+    runApiRequest("profile", OptimusApiBase() + "/api/profile")
+end sub
+
+sub showProfile(code as Integer, data as Dynamic)
+    if code = 401
+        m.authToken = ""
+        m.registry.Write("authToken", "")
+        m.registry.Flush()
+        m.currentView = "account"
+        m.status.text = "Your OPTIMUS device session expired. Connect your account again."
+        renderCurrentView()
+        return
+    else if code < 200 or code >= 300
+        m.status.text = "Your account connected, but its profile could not be loaded."
+        return
+    end if
+    profile = data.profile
+    if profile = invalid
+        m.profileNeedsInit = true
+    else
+        m.profileNeedsInit = false
+        if profile.providers <> invalid then m.services = profile.providers
+        m.watchlist = []
+        m.watchlistTitles = []
+        if profile.watchlist <> invalid
+            for each item in profile.watchlist
+                id = readString(item, "id")
+                if id <> ""
+                    m.watchlist.Push(id)
+                    m.watchlistTitles.Push(item)
+                end if
+            end for
+        end if
+        saveRegistryList("services", m.services)
+        saveRegistryList("watchlist", m.watchlist)
+    end if
+    m.currentView = "discover"
+    loadCatalog()
+end sub
+
+sub saveProfile()
+    payload = { providers: m.services, watchlist: m.watchlistTitles }
+    runApiRequest("profile_save", OptimusApiBase() + "/api/profile", "PUT", FormatJson(payload))
+end sub
+
+sub onSearchButton()
+    if m.searchDialog.buttonSelected = 0
+        m.searchQuery = m.searchDialog.text
+        m.currentView = "discover"
+        loadCatalog()
+    end if
+    m.searchDialog.visible = false
+    m.list.setFocus(true)
+end sub

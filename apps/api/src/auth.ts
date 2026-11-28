@@ -59,6 +59,51 @@ export function registerAuthRoutes(app: Hono<{ Bindings: AuthBindings }>) {
     if (!user || !password || await passwordHash(password,user.password_salt,user.password_iterations) !== user.password_hash) return jsonError("Email or password is incorrect.", 401);
     return createSession(c,user.id);
   });
+  // Roku device authorization: the television displays a short code; the signed-in web account approves it.
+  app.post("/api/device/pair", async c => {
+    const deviceCode = randomHex(32);
+    const userCode = randomHex(4).toUpperCase();
+    const expires = Math.floor(Date.now() / 1000) + 10 * 60;
+    const createdAt = new Date().toISOString();
+    await c.env.OPTIMUS_DB.prepare(
+      "INSERT INTO device_pairings (device_code_hash,user_code,expires_at,created_at) VALUES (?,?,?,?)"
+    ).bind(await digest(deviceCode), userCode, expires, createdAt).run();
+    return c.json({ deviceCode, userCode, verificationUrl: "https://optimus-bud.pages.dev", expiresIn: 600 });
+  });
+
+  app.post("/api/device/pair/approve", async c => {
+    const userId = await currentUser(c);
+    if (!userId) return jsonError("Sign in to OPTIMUS before approving a device.", 401);
+    const body = await c.req.json<{ userCode?: string }>().catch(() => ({} as { userCode?: string }));
+    const userCode = (body.userCode || "").trim().toUpperCase();
+    if (!/^[A-F0-9]{8}$/.test(userCode)) return jsonError("Enter the 8-character code shown on your Roku.", 400);
+    const result = await c.env.OPTIMUS_DB.prepare(
+      "UPDATE device_pairings SET user_id=?, approved_at=? WHERE user_code=? AND user_id IS NULL AND expires_at>?"
+    ).bind(userId, new Date().toISOString(), userCode, Math.floor(Date.now() / 1000)).run();
+    if (!result.meta.changes) return jsonError("That code is invalid, expired, or already approved.", 404);
+    return c.json({ ok: true });
+  });
+
+  app.post("/api/device/pair/token", async c => {
+    const body = await c.req.json<{ deviceCode?: string }>().catch(() => ({} as { deviceCode?: string }));
+    const deviceCode = body.deviceCode || "";
+    if (!/^[a-f0-9]{64}$/.test(deviceCode)) return jsonError("Invalid device authorization code.", 400);
+    const pairing = await c.env.OPTIMUS_DB.prepare(
+      "SELECT user_id,expires_at FROM device_pairings WHERE device_code_hash=?"
+    ).bind(await digest(deviceCode)).first<{ user_id: string | null; expires_at: number }>();
+    if (!pairing || pairing.expires_at <= Math.floor(Date.now() / 1000)) return jsonError("Device authorization expired. Start again on your Roku.", 410);
+    if (!pairing.user_id) return c.json({ status: "pending" }, 202);
+    const token = randomHex(32);
+    const expires = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
+    const createdAt = new Date().toISOString();
+    await c.env.OPTIMUS_DB.prepare(
+      "INSERT INTO sessions (token_hash,user_id,expires_at,created_at) VALUES (?,?,?,?)"
+    ).bind(await digest(token), pairing.user_id, expires, createdAt).run();
+    const user = await c.env.OPTIMUS_DB.prepare("SELECT email FROM users WHERE id=?").bind(pairing.user_id).first<{ email: string }>();
+    await c.env.OPTIMUS_DB.prepare("DELETE FROM device_pairings WHERE device_code_hash=?").bind(await digest(deviceCode)).run();
+    return c.json({ status: "approved", token, expiresIn: SESSION_SECONDS, user: { email: user?.email } });
+  });
+
   app.post("/api/auth/logout", async c => {
     const token = cookieValue(c.req.header("Cookie") || "", "optimus_session");
     if (token) await c.env.OPTIMUS_DB.prepare("DELETE FROM sessions WHERE token_hash=?").bind(await digest(token)).run();
@@ -89,7 +134,9 @@ export function registerAuthRoutes(app: Hono<{ Bindings: AuthBindings }>) {
   });
 
   async function currentUser(c: AuthContext) {
-    const token = cookieValue(c.req.header("Cookie") || "", "optimus_session");
+    const authorization = c.req.header("Authorization") || "";
+    const bearer = authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
+    const token = bearer || cookieValue(c.req.header("Cookie") || "", "optimus_session");
     if (!token) return null;
     const row = await c.env.OPTIMUS_DB.prepare("SELECT user_id FROM sessions WHERE token_hash=? AND expires_at>?").bind(await digest(token),Math.floor(Date.now()/1000)).first<{user_id:string}>();
     return row?.user_id || null;
