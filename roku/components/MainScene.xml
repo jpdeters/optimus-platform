@@ -13,7 +13,7 @@
 <Rectangle width="7" height="42" translation="[70,176]" color="#B7A47E" />
 <Label id="section" text="DISCOVER" translation="[92,170]" width="700" height="45" color="#B7A47E" font="font:MediumBoldSystemFont" />
 <Label id="status" text="Connecting to OPTIMUS..." translation="[74,222]" width="1100" height="35" color="#AAA8A1" />
-<MarkupGrid id="titles" translation="[70,270]" itemSize="[260,300]" numColumns="4" numRows="2" itemComponentName="PosterCard" itemSpacing="[18,18]" />
+<MarkupGrid id="titles" translation="[70,270]" itemSize="[260,300]" numColumns="4" numRows="1" itemComponentName="PosterCard" itemSpacing="[18,18]" />
 <Rectangle width="1140" height="2" translation="[70,625]" color="#303035" />
 <Label id="detailHint" text="OK: Details   ·   OPTIONS: My Services / Watchlist     BACK: Return" translation="[74,645]" width="1120" height="40" color="#8C8A84" />
 <Rectangle width="48" height="4" translation="[70,704]" color="#B7A47E" />
