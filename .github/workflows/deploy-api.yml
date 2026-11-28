@@ -7,6 +7,7 @@ on:
     paths:
       - 'apps/api/**'
       - 'packages/shared/**'
+      - 'roku/**'
       - '.github/workflows/deploy-api.yml'
 
 jobs:
@@ -106,7 +107,6 @@ jobs:
           curl -fsS -b "$COOKIE_JAR" -X PUT "$BASE/api/profile" -H "Content-Type: application/json" --data '{"providers":["8"],"watchlist":[]}' | jq -e '.ok == true'
           curl -fsS -b "$COOKIE_JAR" "$BASE/api/profile" | jq -e '.profile.providers == ["8"]'
 
-          # Verify Roku device pairing and bearer-token profile access.
           PAIR=$(curl -fsS -X POST "$BASE/api/device/pair" -H "Content-Type: application/json" --data '{}')
           DEVICE_CODE=$(echo "$PAIR" | jq -r '.deviceCode')
           USER_CODE=$(echo "$PAIR" | jq -r '.userCode')
@@ -118,7 +118,7 @@ jobs:
           curl -fsS -H "Authorization: Bearer $DEVICE_TOKEN" "$BASE/api/profile" | jq -e '.profile.providers == ["8"]'
 
           curl -fsS -b "$COOKIE_JAR" -X POST "$BASE/api/auth/logout" | jq -e '.ok == true'
-          echo "Real registration, cookie session, profile persistence, Roku device pairing, bearer-token profile access, and logout all passed."
+          echo "Registration, cookie session, profile persistence, Roku pairing, bearer-token profile access, and logout all passed."
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
