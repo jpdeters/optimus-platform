@@ -38,7 +38,7 @@ jobs:
       - name: Package Roku sideload ZIP
         run: |
           cd roku
-          zip -r ../optimus-roku.zip manifest source components
+          zip -r ../optimus-roku.zip manifest source components images
           cd ..
           unzip -l optimus-roku.zip
           unzip -p optimus-roku.zip manifest | grep -q '^title=OPTIMUS$'

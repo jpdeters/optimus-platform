@@ -7,8 +7,9 @@
 <Rectangle width="1280" height="3" color="#22CDEB" />
 <Rectangle width="1280" height="1" translation="[0,138]" color="#17466D" />
 <Group id="browseGroup">
-<Label id="brand" text="OPTIMUS" translation="[70,35]" width="700" height="65" color="#F4F8FF" font="font:LargeBoldSystemFont" />
-<Label id="tagline" text="YOUR STREAMING COMPANION" translation="[74,99]" width="700" height="28" color="#8FC9F2" font="font:SmallSystemFont" />
+<Poster id="brandMark" uri="pkg:/images/optimus-emblem.png" width="108" height="108" loadWidth="144" loadHeight="144" loadDisplayMode="scaleToFit" translation="[58,12]" />
+<Label id="brand" text="OPTIMUS" translation="[176,30]" width="700" height="65" color="#F4F8FF" font="font:LargeBoldSystemFont" />
+<Label id="tagline" text="YOUR STREAMING COMPANION" translation="[180,91]" width="700" height="28" color="#8FC9F2" font="font:SmallSystemFont" />
 <Rectangle width="7" height="42" translation="[70,176]" color="#2CCCEB" />
 <Label id="section" text="DISCOVER" translation="[92,170]" width="700" height="45" color="#59D6FF" font="font:MediumBoldSystemFont" />
 <Label id="status" text="Connecting to OPTIMUS..." translation="[74,222]" width="1100" height="35" color="#A8BED8" />
@@ -21,7 +22,8 @@
 <Rectangle width="48" height="4" translation="[214,704]" color="#FF963D" />
 </Group>
 <Group id="detailGroup" visible="false">
-<Label id="detailEyebrow" text="OPTIMUS  /  TITLE DETAILS" translation="[74,50]" width="900" height="35" color="#56D2F6" />
+<Poster id="detailBrandMark" uri="pkg:/images/optimus-emblem.png" width="58" height="58" loadWidth="96" loadHeight="96" loadDisplayMode="scaleToFit" translation="[66,26]" />
+<Label id="detailEyebrow" text="OPTIMUS  /  TITLE DETAILS" translation="[140,43]" width="900" height="35" color="#56D2F6" />
 <Label id="detailTitle" text="" translation="[74,105]" width="1120" height="80" color="#F4F8FF" font="font:LargeBoldSystemFont" />
 <Label id="detailMeta" text="" translation="[74,205]" width="1120" height="45" color="#C3D5EB" font="font:MediumSystemFont" />
 <Label id="detailGenres" text="" translation="[74,265]" width="1120" height="45" color="#8EB6D8" />
