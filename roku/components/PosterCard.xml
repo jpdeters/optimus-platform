@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component name="PosterCard" extends="Group">
   <interface>
+    <field id="width" type="float" onChange="updateLayout" />
+    <field id="height" type="float" onChange="updateLayout" />
     <field id="itemContent" type="node" onChange="showContent" />
+    <field id="itemHasFocus" type="boolean" onChange="showFocus" />
   </interface>
   <children>
     <Rectangle id="cardBack" width="250" height="292" color="#191A1E" />
     <Rectangle id="fallbackPanel" width="250" height="205" color="#23242A" />
     <Label id="fallbackMark" text="O" translation="[0,52]" width="250" height="100" color="#B7A47E" font="font:LargeBoldSystemFont" horizAlign="center" vertAlign="center" />
     <Poster id="poster" translation="[0,0]" width="250" height="205" loadWidth="500" loadHeight="410" loadDisplayMode="scaleToFill" />
-    <Rectangle translation="[0,205]" width="250" height="87" color="#191A1E" />
+    <Rectangle id="captionBack" translation="[0,205]" width="250" height="87" color="#191A1E" />
     <Label id="cardTitle" translation="[13,215]" width="224" height="34" color="#F1F0EC" font="font:MediumBoldSystemFont" maxLines="1" />
     <Label id="cardMeta" translation="[13,251]" width="224" height="25" color="#AAA8A1" font="font:SmallSystemFont" />
     <Rectangle id="focusLine" translation="[0,288]" width="250" height="4" color="#B7A47E" visible="false" />
