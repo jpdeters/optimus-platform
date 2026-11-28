@@ -19,7 +19,7 @@ sub init()
     m.top.appendChild(m.launchTask)
 
     m.apiTask = CreateObject("roSGNode", "ApiTask")
-    m.apiTask.observeField("responseCode", "onApiResponse")
+    m.apiTask.observeField("responseComplete", "onApiResponse")
     m.top.appendChild(m.apiTask)
     m.list.observeField("itemSelected", "onListSelected")
     m.launchOptions.observeField("itemSelected", "onLaunchSelected")
@@ -70,6 +70,7 @@ sub loadProviders()
     m.status.text = "Loading streaming services..."
     m.currentRequest = "providers"
     m.apiTask.requestUrl = base + "/api/providers"
+    m.apiTask.responseComplete = false
     m.apiTask.control = "RUN"
 end sub
 
@@ -115,6 +116,7 @@ sub loadCatalog()
     m.status.text = "Finding titles on your services..."
     m.currentRequest = "catalog"
     m.apiTask.requestUrl = base + OptimusApiPath() + "?providers=" + serviceQuery
+    m.apiTask.responseComplete = false
     m.apiTask.control = "RUN"
 end sub
 
@@ -310,6 +312,7 @@ sub openSelectedTitle()
     if base <> "" and Instr(1, base, "YOUR-OPTIMUS-API-HOST") = 0
         m.currentRequest = "detail"
         m.apiTask.requestUrl = base + "/api/catalog/" + m.selectedTitleId
+        m.apiTask.responseComplete = false
         m.apiTask.control = "RUN"
     end if
 end sub
