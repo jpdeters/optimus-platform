@@ -71,12 +71,11 @@ sub loadProviders()
     runApiRequest("providers", base + "/api/providers")
 end sub
 
-sub showProvidersResponse(code as Integer, body as String)
+sub showProvidersResponse(code as Integer, parsed as Dynamic)
     if code < 200 or code >= 300
         m.status.text = "Could not load streaming services (" + code.ToStr() + ")."
         return
     end if
-    parsed = ParseJson(body)
     items = extractItems(parsed)
     if items = invalid then return
     m.providers = items
@@ -132,20 +131,19 @@ sub onApiResponse()
     if not m.apiTask.responseComplete then return
     print "[OPTIMUS] Response (" + m.currentRequest + ") code=" + m.apiTask.responseCode.ToStr() + " body=" + Left(m.apiTask.responseBody, 160)
     if m.currentRequest = "providers"
-        showProvidersResponse(m.apiTask.responseCode, m.apiTask.responseBody)
+        showProvidersResponse(m.apiTask.responseCode, m.apiTask.responseData)
     else
-        showCatalogResponse(m.apiTask.responseCode, m.apiTask.responseBody)
+        showCatalogResponse(m.apiTask.responseCode, m.apiTask.responseData)
     end if
 end sub
 
-sub showCatalogResponse(code as Integer, body as String)
+sub showCatalogResponse(code as Integer, parsed as Dynamic)
     if code < 200 or code >= 300
         m.status.text = "API request failed (" + code.ToStr() + "). Check the API connection."
         m.catalogItems = []
         renderCurrentView()
         return
     end if
-    parsed = ParseJson(body)
     items = extractItems(parsed)
     if items = invalid then items = []
     m.catalogItems = items
