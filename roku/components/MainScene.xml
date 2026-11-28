@@ -1,44 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component name="MainScene" extends="Scene">
-    <script type="text/brightscript" uri="pkg:/source/config.brs" />
-    <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
-    <children>
-        <Rectangle width="1280" height="720" color="#101319" />
-        <Group id="browseGroup">
-            <Label id="brand" text="OPTIMUS" translation="[70,35]" width="700" height="65"
-                color="#F4F2ED" font="font:LargeBoldSystemFont" />
-            <Label id="tagline" text="YOUR ENTERTAINMENT, UNIFIED" translation="[74,100]"
-                width="700" height="30" color="#A8AFB9" />
-            <Label id="section" text="DISCOVER" translation="[74,165]" width="700" height="45"
-                color="#F4F2ED" font="font:MediumBoldSystemFont" />
-            <Label id="status" text="Connecting to OPTIMUS..." translation="[74,220]"
-                width="1100" height="35" color="#A8AFB9" />
-            <LabelList id="titles" translation="[70,275]" itemSize="[1120,62]" numRows="5"
-                color="#F4F2ED" focusedColor="#FFFFFF" />
-            <Label id="detailHint" text="OK: Details  ·  OPTIONS: My Services / Watchlist"
-                translation="[74,635]" width="1120" height="40" color="#A8AFB9" />
-        </Group>
-        <Group id="detailGroup" visible="false">
-            <Label id="detailEyebrow" text="TITLE DETAILS" translation="[74,55]"
-                width="900" height="35" color="#A8AFB9" />
-            <Label id="detailTitle" text="" translation="[74,105]" width="1120" height="80"
-                color="#F4F2ED" font="font:LargeBoldSystemFont" />
-            <Label id="detailMeta" text="" translation="[74,205]" width="1120" height="45"
-                color="#D5D8DC" font="font:MediumSystemFont" />
-            <Label id="detailGenres" text="" translation="[74,265]" width="1120" height="45"
-                color="#A8AFB9" />
-            <Label id="detailSynopsis" text="" translation="[74,330]" width="1120" height="150"
-                color="#F4F2ED" wrap="true" />
-            <Label id="detailAvailabilityHeader" text="WHERE TO WATCH" translation="[74,495]"
-                width="800" height="30" color="#A8AFB9" font="font:MediumBoldSystemFont" />
-            <Label id="detailAvailability" text="" translation="[74,532]" width="1120" height="55"
-                color="#F4F2ED" wrap="true" />
-            <Label id="detailWatchHeader" text="OPEN A STREAMING SERVICE" translation="[74,590]"
-                width="1000" height="28" color="#D5C19B" font="font:MediumBoldSystemFont" />
-            <LabelList id="launchOptions" translation="[70,620]" itemSize="[620,38]" numRows="1"
-                color="#F4F2ED" focusedColor="#FFFFFF" />
-            <Label id="detailBack" text="BACK  ·  Return to Discover     OPTIONS  ·  Save / Remove Watchlist"
-                translation="[74,680]" width="1120" height="25" color="#A8AFB9" />
-        </Group>
-    </children>
+<script type="text/brightscript" uri="pkg:/source/config.brs" />
+<script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+<children>
+<Rectangle width="1280" height="720" color="#061329" />
+<Rectangle width="1280" height="3" color="#22CDEB" />
+<Rectangle width="1280" height="1" translation="[0,138]" color="#17466D" />
+<Group id="browseGroup">
+<Label id="brand" text="OPTIMUS" translation="[70,35]" width="700" height="65" color="#F4F8FF" font="font:LargeBoldSystemFont" />
+<Label id="tagline" text="YOUR STREAMING COMPANION" translation="[74,99]" width="700" height="28" color="#8FC9F2" font="font:SmallSystemFont" />
+<Rectangle width="7" height="42" translation="[70,176]" color="#2CCCEB" />
+<Label id="section" text="DISCOVER" translation="[92,170]" width="700" height="45" color="#59D6FF" font="font:MediumBoldSystemFont" />
+<Label id="status" text="Connecting to OPTIMUS..." translation="[74,222]" width="1100" height="35" color="#A8BED8" />
+<LabelList id="titles" translation="[70,275]" itemSize="[1120,62]" numRows="5" color="#DCEAFF" focusedColor="#66DFFF" />
+<Rectangle width="1140" height="2" translation="[70,625]" color="#1A4165" />
+<Label id="detailHint" text="OK: Details   ·   OPTIONS: My Services / Watchlist" translation="[74,645]" width="1120" height="40" color="#8EA8C6" />
+<Rectangle width="48" height="4" translation="[70,704]" color="#25D2EC" />
+<Rectangle width="48" height="4" translation="[118,704]" color="#647DFF" />
+<Rectangle width="48" height="4" translation="[166,704]" color="#C45CE6" />
+<Rectangle width="48" height="4" translation="[214,704]" color="#FF963D" />
+</Group>
+<Group id="detailGroup" visible="false">
+<Label id="detailEyebrow" text="OPTIMUS  /  TITLE DETAILS" translation="[74,50]" width="900" height="35" color="#56D2F6" />
+<Label id="detailTitle" text="" translation="[74,105]" width="1120" height="80" color="#F4F8FF" font="font:LargeBoldSystemFont" />
+<Label id="detailMeta" text="" translation="[74,205]" width="1120" height="45" color="#C3D5EB" font="font:MediumSystemFont" />
+<Label id="detailGenres" text="" translation="[74,265]" width="1120" height="45" color="#8EB6D8" />
+<Label id="detailSynopsis" text="" translation="[74,320]" width="1120" height="125" color="#E5EEF9" wrap="true" />
+<Label id="detailAvailabilityHeader" text="WHERE TO WATCH" translation="[74,455]" width="800" height="30" color="#59D6FF" font="font:MediumBoldSystemFont" />
+<Label id="detailAvailability" text="" translation="[74,490]" width="1120" height="70" color="#DCEAFF" wrap="true" />
+<Label id="detailWatchHeader" text="OPEN A STREAMING SERVICE" translation="[74,570]" width="1000" height="28" color="#A98BFF" font="font:MediumBoldSystemFont" />
+<LabelList id="launchOptions" translation="[70,602]" itemSize="[620,38]" numRows="1" color="#DCEAFF" focusedColor="#69E0FF" />
+<Label id="detailBack" text="BACK  ·  Return to Discover     OPTIONS  ·  Save / Remove Watchlist" translation="[74,680]" width="1120" height="25" color="#8EA8C6" />
+</Group>
+</children>
 </component>
