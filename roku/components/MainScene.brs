@@ -586,6 +586,11 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         return false
     end if
 
+    if key = "OK" and m.currentView = "account" and m.pairDeviceCode <> "" and not m.pairPolling
+        onPairTimer()
+        return true
+    end if
+
     if key = "search" and m.browseGroup.visible and m.currentView <> "account"
         m.searchDialog.visible = false
         m.searchDialog.text = m.searchQuery
@@ -659,18 +664,29 @@ end sub
 
 sub showPairPoll(code as Integer, data as Dynamic)
     m.pairPolling = false
-    if code = 202 then return
+    if code = 202
+        m.status.text = "Waiting for approval. Your code remains active."
+        return
+    end if
     if code < 200 or code >= 300
         m.pairTimer.control = "STOP"
-        m.pairPolling = false
-        m.status.text = "Pairing expired or failed. Select Connect account to try again."
-        m.pairDeviceCode = ""
-        m.pairCodeLabel.visible = false
-        m.list.visible = true
+        serverError = readString(data, "error")
+        if serverError = "" then serverError = Left(m.apiTask.responseBody, 150)
+        if serverError = "" then serverError = "No response body received."
+        m.status.text = "Pairing check failed (" + code.ToStr() + "): " + serverError + "  Press OK to retry."
+        ' Keep the displayed code and device token so a transient network
+        ' failure does not destroy an otherwise valid pairing attempt.
+        if code = 410
+            m.status.text = "Pairing code expired. Press BACK and start again."
+        end if
         return
     end if
     token = readString(data, "token")
-    if token = "" then return
+    if token = "" 
+        m.pairTimer.control = "STOP"
+        m.status.text = "Pairing response did not contain a session token. Press OK to retry."
+        return
+    end if
     m.pairTimer.control = "STOP"
     m.pairDeviceCode = ""
     m.pairPolling = false
