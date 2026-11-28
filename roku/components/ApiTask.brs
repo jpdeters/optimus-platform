@@ -16,10 +16,10 @@ sub executeRequest()
     transfer.EnableEncodings(true)
     transfer.RetainBodyOnError(true)
     transfer.SetUrl(m.top.requestUrl)
-    transfer.SetConnectionTimeout(15)
+    transfer.SetConnectionTimeout(20)
 
-    ' Use the asynchronous API with a hard deadline. GetToString() can block
-    ' indefinitely on some network failures, leaving the Roku UI on its spinner.
+    ' Keep network waits bounded, but allow the catalog's availability lookups
+    ' more time than a single-provider request.
     method = m.top.requestMethod
     if method = "" then method = "GET"
     if method = "GET"
@@ -36,13 +36,13 @@ sub executeRequest()
         return
     end if
 
-    msg = wait(20000, port)
+    msg = wait(60000, port)
     if type(msg) = "roUrlEvent"
         m.top.responseBody = msg.GetString()
         m.top.responseCode = msg.GetResponseCode()
     else
         transfer.AsyncCancel()
-        m.top.responseBody = "Request timed out after 20 seconds."
+        m.top.responseBody = "Request timed out after 60 seconds."
         m.top.responseCode = -1000
     end if
     parsed = {}
