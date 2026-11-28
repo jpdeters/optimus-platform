@@ -384,7 +384,9 @@ end sub
 sub openSelectedTitle()
     item = findCatalogItem(m.selectedTitleId)
     if item <> invalid
-        m.detailTitle.text = readString(item, "name")
+        detailTitle = readString(item, "name")
+        if detailTitle = "" then detailTitle = readString(item, "title")
+        m.detailTitle.text = detailTitle
         m.detailMeta.text = UCase(readString(item, "type")) + "  ·  " + readString(item, "year") + "  ·  " + readString(item, "rating")
         runtime = readString(item, "runtime")
         seasons = readString(item, "seasons")

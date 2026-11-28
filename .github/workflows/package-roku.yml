@@ -34,6 +34,16 @@ jobs:
             xmllint --noout "$file"
           done < <(find roku -type f -name '*.xml' -print0)
           echo "Roku manifest and XML components validated."
+          # Guard against detached Task nodes: the API Task must be created once,
+          # attached to the SceneGraph, and reused by runApiRequest.
+          grep -Fq 'm.apiTask = CreateObject("roSGNode", "ApiTask")' roku/components/MainScene.brs
+          grep -Fq 'm.top.appendChild(m.apiTask)' roku/components/MainScene.brs
+          sed -n '/^sub runApiRequest(/,/^end sub/p' roku/components/MainScene.brs | grep -Fq 'm.apiTask.control = "RUN"'
+          if sed -n '/^sub runApiRequest(/,/^end sub/p' roku/components/MainScene.brs | grep -Fq 'CreateObject("roSGNode", "ApiTask")'; then
+            echo "ERROR: runApiRequest creates a detached API Task instead of reusing the attached node."
+            exit 1
+          fi
+          echo "API Task SceneGraph lifecycle guard passed."
 
       - name: Build sideload ZIP
         run: |
