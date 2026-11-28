@@ -2,10 +2,13 @@ sub init()
     m.status = m.top.findNode("status")
     m.section = m.top.findNode("section")
     m.list = m.top.findNode("titles")
+    m.navList = m.top.findNode("navList")
+    m.navList.observeField("itemSelected", "onNavSelected")
     m.browseGroup = m.top.findNode("browseGroup")
     m.detailGroup = m.top.findNode("detailGroup")
     m.detailEyebrow = m.top.findNode("detailEyebrow")
     m.detailTitle = m.top.findNode("detailTitle")
+    m.detailPoster = m.top.findNode("detailPoster")
     m.detailMeta = m.top.findNode("detailMeta")
     m.detailGenres = m.top.findNode("detailGenres")
     m.detailSynopsis = m.top.findNode("detailSynopsis")
@@ -25,6 +28,7 @@ sub init()
     m.searchDialog.buttons = ["Search", "Cancel"]
     m.searchDialog.observeField("buttonSelected", "onSearchButton")
     m.searchQuery = ""
+    m.providerQuery = ""
 
     m.launchIds = []
     m.launchTask = CreateObject("roSGNode", "LaunchTask")
@@ -256,6 +260,14 @@ function availabilityLabel(item as Object) as String
 end function
 
 sub renderCurrentView()
+    navContent = CreateObject("roSGNode", "ContentNode")
+    navLabels = ["Discover", "My watchlist", "My services", "Account"]
+    for each navLabel in navLabels
+        navChild = navContent.createChild("ContentNode")
+        navChild.title = navLabel
+    end for
+    m.navList.content = navContent
+
     content = CreateObject("roSGNode", "ContentNode")
     m.visibleIds = []
 
@@ -272,12 +284,14 @@ sub renderCurrentView()
         m.section.text = "MY SERVICES  ·  SELECT YOUR SUBSCRIPTIONS"
         m.status.text = "OK toggles a service. Selection is saved on this Roku."
         for each provider in m.providers
-            child = content.createChild("ContentNode")
+            if m.providerQuery = "" or Instr(1, LCase(provider.name), LCase(m.providerQuery)) > 0
+                child = content.createChild("ContentNode")
             selectionLabel = "ADD SERVICE"
             if hasValue(m.services, provider.id) then selectionLabel = "✓ SELECTED"
             child.title = provider.name
             child.shortDescriptionLine1 = selectionLabel
             m.visibleIds.Push(provider.id)
+            end if
         end for
         if m.visibleIds.Count() = 0
             child = content.createChild("ContentNode")
@@ -349,6 +363,24 @@ sub renderCurrentView()
     m.list.setFocus(true)
 end sub
 
+sub onNavSelected()
+    index = m.navList.itemSelected
+    if index = invalid then return
+    if index = 0
+        m.currentView = "discover"
+        loadCatalog()
+    else if index = 1
+        m.currentView = "watchlist"
+        renderCurrentView()
+    else if index = 2
+        m.currentView = "services"
+        renderCurrentView()
+    else if index = 3
+        m.currentView = "account"
+        renderCurrentView()
+    end if
+end sub
+
 sub onListSelected()
     index = m.list.itemSelected
     if index = invalid or index < 0 or index >= m.visibleIds.Count() then return
@@ -387,6 +419,14 @@ sub openSelectedTitle()
         detailTitle = readString(item, "name")
         if detailTitle = "" then detailTitle = readString(item, "title")
         m.detailTitle.text = detailTitle
+        posterPath = readString(item, "imageUrl")
+        if posterPath = "" then posterPath = readString(item, "backdropUrl")
+        if posterPath <> "" and Left(posterPath, 4) <> "http"
+            m.detailPoster.uri = "https://image.tmdb.org/t/p/w500" + posterPath
+        else
+            m.detailPoster.uri = posterPath
+        end if
+        m.detailPoster.visible = (posterPath <> "")
         m.detailMeta.text = UCase(readString(item, "type")) + "  ·  " + readString(item, "year") + "  ·  " + readString(item, "rating")
         runtime = readString(item, "runtime")
         seasons = readString(item, "seasons")
@@ -398,6 +438,7 @@ sub openSelectedTitle()
         renderLaunchOptions(item)
     else
         m.detailTitle.text = "Loading title..."
+        m.detailPoster.visible = false
         m.detailMeta.text = ""
         m.detailGenres.text = ""
         m.detailSynopsis.text = ""
@@ -566,15 +607,6 @@ sub closeDetailView()
     renderCurrentView()
 end sub
 
-sub showDemoTitles()
-    m.catalogItems = [
-        {id:"demo-001", name:"The Last Meridian", type:"series", year:2025, rating:"TV-14", seasons:2, genres:["Drama","Mystery"], synopsis:"A remote coastal town discovers its newest arrival knows more about its history than anyone should.", offers:[{providerId:"stream-a",offerType:"subscription"},{providerId:"stream-c",offerType:"rent"}]},
-        {id:"demo-002", name:"Orbit of Ash", type:"movie", year:2024, rating:"PG-13", runtime:"2h 08m", genres:["Science Fiction","Adventure"], synopsis:"A salvage crew follows a mysterious signal beyond the edge of a mapped solar system.", offers:[{providerId:"stream-b",offerType:"subscription"}]},
-        {id:"demo-003", name:"Small Hours", type:"series", year:2026, rating:"TV-MA", seasons:1, genres:["Comedy","Drama"], synopsis:"Three night-shift coworkers build an unlikely friendship while keeping a city hotel running.", offers:[{providerId:"stream-a",offerType:"subscription"}]}
-    ]
-    renderCurrentView()
-end sub
-
 function onKeyEvent(key as String, press as Boolean) as Boolean
     if not press then return false
 
@@ -589,31 +621,32 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         return false
     end if
 
+    if key = "left"
+        if m.list.itemFocused MOD 5 = 0
+            m.navList.setFocus(true)
+            return true
+        end if
+        return false
+    else if key = "right"
+        m.list.setFocus(true)
+        return true
+    end if
+
     if key = "OK" and m.currentView = "account" and m.pairDeviceCode <> "" and not m.pairPolling
         onPairTimer()
         return true
     end if
 
-    if key = "search" and m.browseGroup.visible and m.currentView <> "account"
+    if (key = "search" or key = "options") and m.browseGroup.visible and m.currentView <> "account"
         m.searchDialog.visible = false
-        m.searchDialog.text = m.searchQuery
+        if m.currentView = "services"
+            m.searchDialog.text = m.providerQuery
+        else
+            m.searchDialog.text = m.searchQuery
+        end if
         m.top.dialog = m.searchDialog
         m.searchDialog.visible = true
         m.searchDialog.setFocus(true)
-        return true
-    else if key = "options"
-        if m.currentView = "discover"
-            m.currentView = "services"
-        else if m.currentView = "services"
-            m.currentView = "watchlist"
-        else if m.currentView = "watchlist"
-            m.currentView = "account"
-        else
-            m.currentView = "discover"
-            loadCatalog()
-            return true
-        end if
-        renderCurrentView()
         return true
     else if key = "back" and m.currentView = "account" and m.pairDeviceCode <> ""
         m.pairTimer.control = "STOP"
@@ -750,9 +783,14 @@ end sub
 
 sub onSearchButton()
     if m.searchDialog.buttonSelected = 0
-        m.searchQuery = m.searchDialog.text
-        m.currentView = "discover"
-        loadCatalog()
+        if m.currentView = "services"
+            m.providerQuery = m.searchDialog.text
+            renderCurrentView()
+        else
+            m.searchQuery = m.searchDialog.text
+            m.currentView = "discover"
+            loadCatalog()
+        end if
     end if
     m.searchDialog.visible = false
     m.list.setFocus(true)
