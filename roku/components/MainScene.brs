@@ -315,6 +315,7 @@ sub renderCurrentView()
                 child.title = title
                 child.description = readString(item, "synopsis")
                 posterPath = readString(item, "imageUrl")
+                if posterPath = "" then posterPath = readString(item, "backdropUrl")
                 if posterPath <> "" and Left(posterPath, 4) <> "http"
                     child.hdPosterUrl = "https://image.tmdb.org/t/p/w500" + posterPath
                 else if posterPath <> ""
