@@ -17,6 +17,7 @@ sub init()
     m.pairTimer.observeField("fire", "onPairTimer")
     m.authToken = ""
     m.pairDeviceCode = ""
+    m.pairPolling = false
     m.watchlistTitles = []
     m.searchDialog = m.top.findNode("searchDialog")
     m.searchDialog.buttons = ["Search", "Cancel"]
@@ -330,8 +331,8 @@ sub renderCurrentView()
     end if
 
     m.list.content = content
-    m.list.visible = (m.currentView <> "account")
-    m.list.setFocus(true)
+    m.list.visible = true
+    if m.currentView = "account" then m.list.setFocus(true) else m.list.setFocus(true)
 end sub
 
 sub onListSelected()
@@ -513,6 +514,11 @@ sub toggleWatchlist()
             if id <> m.selectedTitleId then nextList.Push(id)
         end for
         m.watchlist = nextList
+        nextTitles = []
+        for each savedItem in m.watchlistTitles
+            if readString(savedItem, "id") <> m.selectedTitleId then nextTitles.Push(savedItem)
+        end for
+        m.watchlistTitles = nextTitles
         m.detailEyebrow.text = "REMOVED FROM WATCHLIST"
     else
         m.watchlist.Push(m.selectedTitleId)
@@ -612,19 +618,23 @@ sub showPairStart(code as Integer, data as Dynamic)
     m.pairCodeLabel.text = "GO TO OPTIMUS ON YOUR PHONE OR COMPUTER\nOPEN YOUR ACCOUNT → CONNECT YOUR ROKU\n\n" + userCode
     m.pairCodeLabel.visible = true
     m.status.text = "This code expires in 10 minutes. Waiting for approval..."
+    m.pairPolling = false
     m.pairTimer.control = "START"
 end sub
 
 sub onPairTimer()
-    if m.pairDeviceCode = "" then return
+    if m.pairDeviceCode = "" or m.pairPolling then return
+    m.pairPolling = true
     body = FormatJson({ deviceCode: m.pairDeviceCode })
     runApiRequest("pair_poll", OptimusApiBase() + "/api/device/pair/token", "POST", body)
 end sub
 
 sub showPairPoll(code as Integer, data as Dynamic)
+    m.pairPolling = false
     if code = 202 then return
     if code < 200 or code >= 300
         m.pairTimer.control = "STOP"
+        m.pairPolling = false
         m.status.text = "Pairing expired or failed. Select Connect account to try again."
         m.pairDeviceCode = ""
         return
@@ -633,6 +643,7 @@ sub showPairPoll(code as Integer, data as Dynamic)
     if token = "" then return
     m.pairTimer.control = "STOP"
     m.pairDeviceCode = ""
+    m.pairPolling = false
     m.authToken = token
     m.registry.Write("authToken", token)
     m.registry.Flush()
