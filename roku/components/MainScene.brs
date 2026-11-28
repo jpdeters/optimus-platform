@@ -639,7 +639,11 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
 
     if (key = "search" or key = "options") and m.browseGroup.visible and m.currentView <> "account"
         m.searchDialog.visible = false
-        m.searchDialog.text = m.searchQuery
+        if m.currentView = "services"
+            m.searchDialog.text = m.providerQuery
+        else
+            m.searchDialog.text = m.searchQuery
+        end if
         m.top.dialog = m.searchDialog
         m.searchDialog.visible = true
         m.searchDialog.setFocus(true)
