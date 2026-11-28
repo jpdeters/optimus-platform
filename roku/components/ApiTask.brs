@@ -4,6 +4,7 @@ end sub
 
 sub executeRequest()
     m.top.responseComplete = false
+    m.top.responseData = {}
     transfer = CreateObject("roUrlTransfer")
     port = CreateObject("roMessagePort")
     transfer.SetMessagePort(port)
@@ -35,5 +36,11 @@ sub executeRequest()
         m.top.responseBody = "Request timed out after 20 seconds."
         m.top.responseCode = -1000
     end if
+    parsed = {}
+    if m.top.responseBody <> ""
+        parsed = ParseJson(m.top.responseBody)
+        if type(parsed) <> "roAssociativeArray" then parsed = {}
+    end if
+    m.top.responseData = parsed
     m.top.responseComplete = true
 end sub
