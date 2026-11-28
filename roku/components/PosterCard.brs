@@ -7,6 +7,7 @@ sub init()
   m.focusLine = m.top.findNode("focusLine")
   m.fallbackPanel = m.top.findNode("fallbackPanel")
   m.fallbackMark = m.top.findNode("fallbackMark")
+  m.poster.observeField("loadStatus", "onPosterLoadStatus")
   updateLayout()
 end sub
 
@@ -52,6 +53,16 @@ sub showContent()
     m.fallbackPanel.visible = true
     m.fallbackMark.visible = true
     if item.title <> invalid and item.title <> "" then m.fallbackMark.text = Left(item.title, 1)
+  end if
+end sub
+
+
+sub onPosterLoadStatus()
+  if m.poster.loadStatus = "failed"
+    print "[OPTIMUS] Poster image failed: " + m.poster.uri
+    m.poster.visible = false
+    m.fallbackPanel.visible = true
+    m.fallbackMark.visible = true
   end if
 end sub
 
