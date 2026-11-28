@@ -608,31 +608,25 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         return false
     end if
 
+    if key = "left"
+        m.navList.setFocus(true)
+        return true
+    else if key = "right"
+        m.list.setFocus(true)
+        return true
+    end if
+
     if key = "OK" and m.currentView = "account" and m.pairDeviceCode <> "" and not m.pairPolling
         onPairTimer()
         return true
     end if
 
-    if key = "search" and m.browseGroup.visible and m.currentView <> "account"
+    if (key = "search" or key = "options") and m.browseGroup.visible and m.currentView <> "account"
         m.searchDialog.visible = false
         m.searchDialog.text = m.searchQuery
         m.top.dialog = m.searchDialog
         m.searchDialog.visible = true
         m.searchDialog.setFocus(true)
-        return true
-    else if key = "options"
-        if m.currentView = "discover"
-            m.currentView = "services"
-        else if m.currentView = "services"
-            m.currentView = "watchlist"
-        else if m.currentView = "watchlist"
-            m.currentView = "account"
-        else
-            m.currentView = "discover"
-            loadCatalog()
-            return true
-        end if
-        renderCurrentView()
         return true
     else if key = "back" and m.currentView = "account" and m.pairDeviceCode <> ""
         m.pairTimer.control = "STOP"
