@@ -68,10 +68,7 @@ sub loadProviders()
         return
     end if
     m.status.text = "Loading streaming services..."
-    m.currentRequest = "providers"
-    m.apiTask.requestUrl = base + "/api/providers"
-    m.apiTask.responseComplete = false
-    m.apiTask.control = "RUN"
+    runApiRequest("providers", base + "/api/providers")
 end sub
 
 sub showProvidersResponse(code as Integer, body as String)
@@ -91,6 +88,11 @@ sub showProvidersResponse(code as Integer, body as String)
     end for
     m.services = valid
     saveRegistryList("services", m.services)
+    if m.services.Count() = 0 and m.providers.Count() > 0
+        m.currentView = "services"
+        renderCurrentView()
+        return
+    end if
     loadCatalog()
 end sub
 
@@ -104,7 +106,7 @@ sub loadCatalog()
     end if
     if m.services.Count() = 0
         m.catalogItems = []
-        m.status.text = "Select your streaming services in My Services."
+        if m.providers.Count() > 0 then m.currentView = "services"
         renderCurrentView()
         return
     end if
@@ -114,17 +116,23 @@ sub loadCatalog()
         serviceQuery = serviceQuery + id
     end for
     m.status.text = "Finding titles on your services..."
-    m.currentRequest = "catalog"
-    m.apiTask.requestUrl = base + OptimusApiPath() + "?providers=" + serviceQuery
+    runApiRequest("catalog", base + OptimusApiPath() + "?providers=" + serviceQuery)
+end sub
+
+sub runApiRequest(requestType as String, url as String)
+    print "[OPTIMUS] Request (" + requestType + "): " + url
+    m.currentRequest = requestType
+    m.apiTask.control = "STOP"
+    m.apiTask.requestUrl = url
     m.apiTask.responseComplete = false
     m.apiTask.control = "RUN"
 end sub
 
 sub onApiResponse()
+    if not m.apiTask.responseComplete then return
+    print "[OPTIMUS] Response (" + m.currentRequest + ") code=" + m.apiTask.responseCode.ToStr() + " body=" + Left(m.apiTask.responseBody, 160)
     if m.currentRequest = "providers"
         showProvidersResponse(m.apiTask.responseCode, m.apiTask.responseBody)
-    else if m.currentRequest = "detail"
-        showTitleDetail(m.apiTask.responseCode, m.apiTask.responseBody)
     else
         showCatalogResponse(m.apiTask.responseCode, m.apiTask.responseBody)
     end if
@@ -219,13 +227,22 @@ sub renderCurrentView()
             child.title = prefix + provider.name
             m.visibleIds.Push(provider.id)
         end for
+        if m.visibleIds.Count() = 0
+            child = content.createChild("ContentNode")
+            child.title = "No streaming services returned by API."
+            m.visibleIds.Push("")
+        end if
     else
         if m.currentView = "watchlist"
             m.section.text = "MY WATCHLIST"
             m.status.text = "Your saved titles on this Roku"
         else
             m.section.text = "DISCOVER"
-            m.status.text = "Catalog · availability matched to My Services"
+            if m.services.Count() = 0
+                m.status.text = "Choose your streaming services to begin."
+            else
+                m.status.text = "Catalog · availability matched to My Services"
+            end if
         end if
 
         for each item in m.catalogItems
@@ -245,6 +262,18 @@ sub renderCurrentView()
                 m.visibleIds.Push(id)
             end if
         end for
+
+        if m.visibleIds.Count() = 0
+            child = content.createChild("ContentNode")
+            if m.currentView = "watchlist"
+                child.title = "Your watchlist is empty. Save a title from its detail page."
+            else if m.services.Count() = 0
+                child.title = "No services selected. Choose My Services to get started."
+            else
+                child.title = "No titles found for your selected services."
+            end if
+            m.visibleIds.Push("")
+        end if
         if m.currentView = "watchlist" and m.visibleIds.Count() = 0
             child = content.createChild("ContentNode")
             child.title = "Your watchlist is empty. Save a title from its detail page."
@@ -308,13 +337,6 @@ sub openSelectedTitle()
     end if
     openDetailView()
 
-    base = OptimusApiBase()
-    if base <> "" and Instr(1, base, "YOUR-OPTIMUS-API-HOST") = 0
-        m.currentRequest = "detail"
-        m.apiTask.requestUrl = base + "/api/catalog/" + m.selectedTitleId
-        m.apiTask.responseComplete = false
-        m.apiTask.control = "RUN"
-    end if
 end sub
 
 function findCatalogItem(id as String) as Dynamic
@@ -324,21 +346,7 @@ function findCatalogItem(id as String) as Dynamic
     return invalid
 end function
 
-sub showTitleDetail(code as Integer, body as String)
-    if code < 200 or code >= 300 then return
-    item = ParseJson(body)
-    if item = invalid then return
-    m.detailTitle.text = readString(item, "name")
-    m.detailMeta.text = UCase(readString(item, "type")) + "  ·  " + readString(item, "year") + "  ·  " + readString(item, "rating")
-    runtime = readString(item, "runtime")
-    seasons = readString(item, "seasons")
-    if runtime <> "" then m.detailMeta.text = m.detailMeta.text + "  ·  " + runtime
-    if seasons <> "" then m.detailMeta.text = m.detailMeta.text + "  ·  " + seasons + " season(s)"
-    m.detailGenres.text = joinArray(item.genres, "  ·  ")
-    m.detailSynopsis.text = readString(item, "synopsis")
-    m.detailAvailability.text = formatOffers(item.offers)
-    renderLaunchOptions(item)
-end sub
+
 
 function rokuChannelId(providerId as String, name as String) as String
     ' Roku channel IDs for common US streaming apps.
