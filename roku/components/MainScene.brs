@@ -183,6 +183,11 @@ sub showCatalogResponse(code as Integer, parsed as Dynamic)
     m.catalogItems = items
     m.status.text = items.Count().ToStr() + " titles available across your selected services"
     if m.profileNeedsInit and m.authToken <> ""
+        m.watchlistTitles = []
+        for each savedId in m.watchlist
+            savedTitle = findCatalogItem(savedId)
+            if savedTitle <> invalid then m.watchlistTitles.Push(savedTitle)
+        end for
         m.profileNeedsInit = false
         saveProfile()
     end if
