@@ -15,7 +15,7 @@
 <Label id="status" text="Connecting to OPTIMUS..." translation="[74,222]" width="1100" height="35" color="#AAA8A1" />
 <Label id="pairCode" text="" translation="[74,265]" width="1100" height="110" color="#B7A47E" font="font:LargeBoldSystemFont" wrap="true" visible="false" />
 <Timer id="pairTimer" duration="2" repeat="true" />
-<MarkupGrid id="titles" translation="[70,270]" itemSize="[260,300]" numColumns="4" numRows="1" itemComponentName="PosterCard" itemSpacing="[18,18]" />
+<MarkupGrid id="titles" translation="[70,270]" width="1120" height="310" itemSize="[250,292]" numColumns="4" numRows="1" itemComponentName="PosterCard" focusable="true" itemSpacing="[18,18]" />
 <Rectangle width="1140" height="2" translation="[70,625]" color="#303035" />
 <Label id="detailHint" text="OK: Details   ·   OPTIONS: My Services / Watchlist     BACK: Return" translation="[74,645]" width="1120" height="40" color="#8C8A84" />
 <Rectangle width="48" height="4" translation="[70,704]" color="#B7A47E" />
@@ -36,6 +36,6 @@
 <LabelList id="launchOptions" translation="[70,602]" itemSize="[620,38]" numRows="1" color="#DCEAFF" focusedColor="#69E0FF" />
 <Label id="detailBack" text="BACK  ·  Return to Discover     OPTIONS  ·  Save / Remove Watchlist" translation="[74,680]" width="1120" height="25" color="#8EA8C6" />
 </Group>
-<KeyboardDialog id="searchDialog" title="Search OPTIMUS" />
+<KeyboardDialog id="searchDialog" title="Search OPTIMUS" visible="false" />
 </children>
 </component>

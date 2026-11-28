@@ -1,4 +1,6 @@
 sub init()
+  m.top.width = 250
+  m.top.height = 292
   m.poster = m.top.findNode("poster")
   m.cardTitle = m.top.findNode("cardTitle")
   m.cardMeta = m.top.findNode("cardMeta")
